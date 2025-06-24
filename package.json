@@ -1,0 +1,13 @@
+{
+  "name": "tidal",
+  "version": "1.0.0",
+  "description": "2D physics simulation showing tidal forces on a planet with customizable moon distance.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
