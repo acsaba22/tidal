@@ -2,9 +2,14 @@
   "name": "tidal",
   "version": "1.0.0",
   "description": "2D physics simulation showing tidal forces on a planet with customizable moon distance.",
-  "main": "index.js",
+  "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/webgl2": "^0.0.7"
   },
   "keywords": [],
   "author": "",

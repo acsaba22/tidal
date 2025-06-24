@@ -15,8 +15,32 @@ Allow real-time adjustment of moon distance (including infinite distance)
 - Two hosting modes: local dev server + GitHub Pages
 
 
+
 ## Development Plan
 - Use `tsc` for TypeScript compilation
 - TBD: Choose web server for local development
 - Build static files for GitHub Pages deployment
 
+# Cheet sheet
+
+## Setup
+
+**Prerequisites:** Node.js + npm installed
+
+```bash
+# Install dependencies
+npm install
+
+# Build once
+npm run build
+
+# Watch mode (auto-rebuild on file changes)
+npm run watch
+```
+
+## Cleanup
+
+```bash
+# Remove all build dependencies (safe to delete)
+rm -rf node_modules/
+```
