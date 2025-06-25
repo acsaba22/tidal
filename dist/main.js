@@ -1,4 +1,16 @@
 "use strict";
+function resizeCanvas(canvas, gl) {
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        console.log('Resize, new dimensions: ', displayWidth, displayHeight);
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, displayWidth, displayHeight);
+        gl.clearColor(0.1, 0.1, 0.3, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+}
 function main() {
     const canvas = document.getElementById('canvas');
     if (!canvas) {
@@ -13,9 +25,7 @@ function main() {
     console.log('WebGL context initialized successfully');
     console.log('WebGL version:', gl.getParameter(gl.VERSION));
     console.log('Renderer:', gl.getParameter(gl.RENDERER));
-    // Clear the canvas with a dark blue color
-    gl.clearColor(0.1, 0.1, 0.3, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    resizeCanvas(canvas, gl);
+    window.addEventListener('resize', () => resizeCanvas(canvas, gl));
 }
-// Run when page loads
 window.addEventListener('load', main);

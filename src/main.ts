@@ -1,3 +1,18 @@
+function resizeCanvas(canvas: HTMLCanvasElement, gl: WebGLRenderingContext): void {
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+
+    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        console.log('Resize, new dimensions: ', displayWidth, displayHeight);
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, displayWidth, displayHeight);
+
+        gl.clearColor(0.1, 0.1, 0.3, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+}
+
 function main(): void {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     if (!canvas) {
@@ -15,10 +30,8 @@ function main(): void {
     console.log('WebGL version:', gl.getParameter(gl.VERSION));
     console.log('Renderer:', gl.getParameter(gl.RENDERER));
 
-    // Clear the canvas with a dark blue color
-    gl.clearColor(0.1, 0.1, 0.3, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    resizeCanvas(canvas, gl);
+    window.addEventListener('resize', () => resizeCanvas(canvas, gl));
 }
 
-// Run when page loads
 window.addEventListener('load', main);
