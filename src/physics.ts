@@ -1,8 +1,18 @@
 import { Second } from './types.js';
 
-export interface Vector2 {
-    x: number;
-    y: number;
+export class Coor {
+    constructor(public x: number, public y: number) {}
+    
+    add(other: Coor): Coor { return new Coor(this.x + other.x, this.y + other.y); }
+    subtract(other: Coor): Coor { return new Coor(this.x - other.x, this.y - other.y); }
+    multiply(scalar: number): Coor { return new Coor(this.x * scalar, this.y * scalar); }
+    distance(): number { return Math.sqrt(this.x * this.x + this.y * this.y); }
+    distanceTo(other: Coor): number { return this.subtract(other).distance(); }
+    normalize(): Coor { const d = this.distance(); return d > 0 ? this.multiply(1/d) : new Coor(0, 0); }
+    
+    addInPlace(other: Coor): void { this.x += other.x; this.y += other.y; }
+    subtractInPlace(other: Coor): void { this.x -= other.x; this.y -= other.y; }
+    multiplyInPlace(scalar: number): void { this.x *= scalar; this.y *= scalar; }
 }
 
 const PARTICLE_SIZE = 0.01;
@@ -17,28 +27,25 @@ const REST_DISTANCE = PARTICLE_SIZE * 2;
 const FORCE_TO_VELOCITY_SCALE = 0.1;
 
 export class Particle {
-    public position: Vector2;
-    public force: Vector2 = { x: 0, y: 0 };
-    public gravityForce: Vector2 = { x: 0, y: 0 };
-    public pressureForce: Vector2 = { x: 0, y: 0 };
+    public position: Coor;
+    public force: Coor = new Coor(0, 0);
+    public gravityForce: Coor = new Coor(0, 0);
+    public pressureForce: Coor = new Coor(0, 0);
 
     constructor(x: number, y: number) {
-        this.position = { x, y };
+        this.position = new Coor(x, y);
     }
 
     calculateGravityForce(): void {
-        this.gravityForce.x = -this.position.x * PLANET_GRAVITY;
-        this.gravityForce.y = -this.position.y * PLANET_GRAVITY;
+        this.gravityForce = this.position.multiply(-PLANET_GRAVITY);
     }
 
     clearPressureForce(): void {
-        this.pressureForce.x = 0;
-        this.pressureForce.y = 0;
+        this.pressureForce = new Coor(0, 0);
     }
 
     sumUpForces(): void {
-        this.force.x = this.gravityForce.x + this.pressureForce.x;
-        this.force.y = this.gravityForce.y + this.pressureForce.y;
+        this.force = this.gravityForce.add(this.pressureForce);
     }
 
     moveByForce(deltaTime: Second): void {
@@ -47,8 +54,8 @@ export class Particle {
     }
 
     getTriangleVertices(): number[] {
-        const pointingForce: Vector2 = this.gravityForce;
-        const forceLength = Math.sqrt(pointingForce.x * pointingForce.x + pointingForce.y * pointingForce.y);
+        const pointingForce: Coor = this.gravityForce;
+        const forceLength = pointingForce.distance();
 
         if (forceLength === 0) {
             // Default upward triangle if no force
@@ -60,8 +67,7 @@ export class Particle {
         }
 
         // Normalize force direction
-        const dirX = pointingForce.x / forceLength;
-        const dirY = pointingForce.y / forceLength;
+        const direction = pointingForce.multiply(1 / forceLength);
 
         // Calculate triangle vertices pointing in force direction
         const forceAspectRatio = 1.0 + TRIANGLE_ASPECT_RATIO * ( forceLength * FORCE_POINTINESS_SCALE);
@@ -69,38 +75,30 @@ export class Particle {
         const height = TRIANGLE_SIZE;
 
         // Tip point (in force direction)
-        const tipX = this.position.x + dirX * height;
-        const tipY = this.position.y + dirY * height;
+        const tip = this.position.add(direction.multiply(height));
 
         // Base points (perpendicular to force direction)
-        const perpX = -dirY;
-        const perpY = dirX;
+        const perpendicular = new Coor(-direction.y, direction.x);
+        const baseCenter = this.position.subtract(direction.multiply(height));
+        const base1 = baseCenter.add(perpendicular.multiply(halfWidth));
+        const base2 = baseCenter.subtract(perpendicular.multiply(halfWidth));
 
-        const base1X = this.position.x - dirX * height + perpX * halfWidth;
-        const base1Y = this.position.y - dirY * height + perpY * halfWidth;
-        const base2X = this.position.x - dirX * height - perpX * halfWidth;
-        const base2Y = this.position.y - dirY * height - perpY * halfWidth;
-
-        return [tipX, tipY, base1X, base1Y, base2X, base2Y];
+        return [tip.x, tip.y, base1.x, base1.y, base2.x, base2.y];
     }
 }
 
 function addPressureForceBetween(p1: Particle, p2: Particle): void {
-    const dx = p2.position.x - p1.position.x;
-    const dy = p2.position.y - p1.position.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const diff = p2.position.subtract(p1.position);
+    const distance = diff.distance();
 
     if (distance < REST_DISTANCE && distance > 0) {
         const overlap = REST_DISTANCE - distance;
         const forceMagnitude = PRESSURE_STRENGTH * overlap;
-        
-        const fx = forceMagnitude * (dx / distance);
-        const fy = forceMagnitude * (dy / distance);
+        const forceDirection = diff.multiply(1 / distance);
+        const force = forceDirection.multiply(forceMagnitude);
 
-        p1.pressureForce.x -= fx;
-        p1.pressureForce.y -= fy;
-        p2.pressureForce.x += fx;
-        p2.pressureForce.y += fy;
+        p1.pressureForce.subtractInPlace(force);
+        p2.pressureForce.addInPlace(force);
     }
 }
 
