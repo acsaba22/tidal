@@ -1,9 +1,19 @@
 const PARTICLE_SIZE = 0.01;
 const GRID_DISTANCE = PARTICLE_SIZE * 2;
 const GRID_SIZE = 10;
+const PLANET_GRAVITY = 1.0;
 export class Particle {
     constructor(x, y) {
+        this.force = { x: 0, y: 0 };
         this.position = { x, y };
+    }
+    calculateGravityForce() {
+        this.force.x = -this.position.x * PLANET_GRAVITY;
+        this.force.y = -this.position.y * PLANET_GRAVITY;
+    }
+    moveByForce(deltaTime) {
+        this.position.x += this.force.x * deltaTime * 0.01;
+        this.position.y += this.force.y * deltaTime * 0.01;
     }
 }
 export class PhysicalWorld {
@@ -21,9 +31,15 @@ export class PhysicalWorld {
             }
         }
     }
-    step(deltaTime) {
+    calculateForces() {
         for (const particle of this.particles) {
-            particle.position.x += 0.01 * deltaTime;
+            particle.calculateGravityForce();
+        }
+    }
+    step(deltaTime) {
+        this.calculateForces();
+        for (const particle of this.particles) {
+            particle.moveByForce(deltaTime);
         }
     }
 }
