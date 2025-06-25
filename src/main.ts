@@ -1,4 +1,29 @@
 import { PhysicalWorld } from './physics.js';
+import { Millisecond, Second, msToSeconds } from './types.js';
+
+class AnimationLoop {
+    private lastTime: Millisecond = 0;
+    private world: PhysicalWorld;
+    private gl: WebGLRenderingContext;
+
+    constructor(world: PhysicalWorld, gl: WebGLRenderingContext) {
+        this.world = world;
+        this.gl = gl;
+    }
+
+    start(): void {
+        const animate = (currentTime: Millisecond): void => {
+            const deltaTimeMs = currentTime - this.lastTime;
+            const deltaTimeS = msToSeconds(deltaTimeMs);
+            this.lastTime = currentTime;
+
+            this.world.step(deltaTimeS);
+            render(this.gl);
+            requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+    }
+}
 
 let shaderProgram: WebGLProgram | null = null;
 let vertexBuffer: WebGLBuffer | null = null;
@@ -144,6 +169,9 @@ function main(): void {
 
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
+
+    const animationLoop = new AnimationLoop(world, gl);
+    animationLoop.start();
 }
 
 window.addEventListener('load', main);

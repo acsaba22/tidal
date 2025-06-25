@@ -1,3 +1,5 @@
+import { Second } from './types.js';
+
 export interface Vector2 {
     x: number;
     y: number;
@@ -34,7 +36,7 @@ export class PhysicalWorld {
         }
     }
 
-    step(deltaTime: number): void {
+    step(deltaTime: Second): void {
         for (const particle of this.particles) {
             particle.position.x += 0.01 * deltaTime;
         }
