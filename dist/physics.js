@@ -5,21 +5,35 @@ const PLANET_GRAVITY = 1.0;
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 const TRIANGLE_ASPECT_RATIO = 2.0;
 const FORCE_POINTINESS_SCALE = 10.0;
+const PRESSURE_STRENGTH = 5.0;
+const REST_DISTANCE = PARTICLE_SIZE * 2;
+const FORCE_TO_VELOCITY_SCALE = 0.1;
 export class Particle {
     constructor(x, y) {
         this.force = { x: 0, y: 0 };
+        this.gravityForce = { x: 0, y: 0 };
+        this.pressureForce = { x: 0, y: 0 };
         this.position = { x, y };
     }
     calculateGravityForce() {
-        this.force.x = -this.position.x * PLANET_GRAVITY;
-        this.force.y = -this.position.y * PLANET_GRAVITY;
+        this.gravityForce.x = -this.position.x * PLANET_GRAVITY;
+        this.gravityForce.y = -this.position.y * PLANET_GRAVITY;
+    }
+    clearPressureForce() {
+        this.pressureForce.x = 0;
+        this.pressureForce.y = 0;
+    }
+    sumUpForces() {
+        this.force.x = this.gravityForce.x + this.pressureForce.x;
+        this.force.y = this.gravityForce.y + this.pressureForce.y;
     }
     moveByForce(deltaTime) {
-        this.position.x += this.force.x * deltaTime * 0.01;
-        this.position.y += this.force.y * deltaTime * 0.01;
+        this.position.x += this.force.x * deltaTime * FORCE_TO_VELOCITY_SCALE;
+        this.position.y += this.force.y * deltaTime * FORCE_TO_VELOCITY_SCALE;
     }
     getTriangleVertices() {
-        const forceLength = Math.sqrt(this.force.x * this.force.x + this.force.y * this.force.y);
+        const pointingForce = this.gravityForce;
+        const forceLength = Math.sqrt(pointingForce.x * pointingForce.x + pointingForce.y * pointingForce.y);
         if (forceLength === 0) {
             // Default upward triangle if no force
             return [
@@ -29,8 +43,8 @@ export class Particle {
             ];
         }
         // Normalize force direction
-        const dirX = this.force.x / forceLength;
-        const dirY = this.force.y / forceLength;
+        const dirX = pointingForce.x / forceLength;
+        const dirY = pointingForce.y / forceLength;
         // Calculate triangle vertices pointing in force direction
         const forceAspectRatio = 1.0 + TRIANGLE_ASPECT_RATIO * (forceLength * FORCE_POINTINESS_SCALE);
         const halfWidth = TRIANGLE_SIZE / forceAspectRatio;
@@ -48,6 +62,21 @@ export class Particle {
         return [tipX, tipY, base1X, base1Y, base2X, base2Y];
     }
 }
+function addPressureForceBetween(p1, p2) {
+    const dx = p2.position.x - p1.position.x;
+    const dy = p2.position.y - p1.position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < REST_DISTANCE && distance > 0) {
+        const overlap = REST_DISTANCE - distance;
+        const forceMagnitude = PRESSURE_STRENGTH * overlap;
+        const fx = forceMagnitude * (dx / distance);
+        const fy = forceMagnitude * (dy / distance);
+        p1.pressureForce.x -= fx;
+        p1.pressureForce.y -= fy;
+        p2.pressureForce.x += fx;
+        p2.pressureForce.y += fy;
+    }
+}
 export class PhysicalWorld {
     constructor() {
         this.particles = [];
@@ -63,9 +92,21 @@ export class PhysicalWorld {
             }
         }
     }
+    calculatePressureForces() {
+        for (const particle of this.particles) {
+            particle.clearPressureForce();
+        }
+        for (let i = 0; i < this.particles.length; i++) {
+            for (let j = i + 1; j < this.particles.length; j++) {
+                addPressureForceBetween(this.particles[i], this.particles[j]);
+            }
+        }
+    }
     calculateForces() {
+        this.calculatePressureForces();
         for (const particle of this.particles) {
             particle.calculateGravityForce();
+            particle.sumUpForces();
         }
     }
     getAllTriangleVertices() {
