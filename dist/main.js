@@ -40,11 +40,16 @@ function initWebGL(gl) {
         console.error('Program link error:', gl.getProgramInfoLog(shaderProgram));
         return false;
     }
-    // Triangle vertices
+    // Two triangles vertices
     const vertices = new Float32Array([
-        0.0, 0.1, // Top
-        -0.05, -0.1, // Bottom left
-        0.05, -0.1 // Bottom right
+        // Triangle 1 (left)
+        -0.3, 0.1, // Top
+        -0.35, -0.1, // Bottom left  
+        -0.25, -0.1, // Bottom right
+        // Triangle 2 (right)
+        0.3, 0.1, // Top
+        0.25, -0.1, // Bottom left
+        0.35, -0.1 // Bottom right
     ]);
     vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -61,7 +66,7 @@ function render(gl) {
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 function resizeCanvas(canvas, gl) {
     const displayWidth = canvas.clientWidth;
