@@ -1,4 +1,15 @@
 import { globalTimers } from './timers.js';
+const PARTICLE_SIZE = 0.01;
+const GRID_SIZE = 25; // particle count = GRID_SIZE^2
+const GRID_DISTANCE = PARTICLE_SIZE * 2;
+const PLANET_GRAVITY = 1.0;
+const PRESSURE_STRENGTH = 30.0;
+const FORCE_TO_VELOCITY_SCALE = 0.3;
+const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
+const TRIANGLE_ASPECT_RATIO = 2.0;
+const FORCE_POINTINESS_SCALE = 10.0;
+const REST_DISTANCE = PARTICLE_SIZE * 2;
+export const VIEWPORT_ZOOM = 4.0;
 const physicsTimer = globalTimers.get('worldStep');
 export class Coor {
     constructor(x, y) {
@@ -15,16 +26,6 @@ export class Coor {
     subtractInPlace(other) { this.x -= other.x; this.y -= other.y; }
     multiplyInPlace(scalar) { this.x *= scalar; this.y *= scalar; }
 }
-const PARTICLE_SIZE = 0.01;
-const GRID_DISTANCE = PARTICLE_SIZE * 2;
-const GRID_SIZE = 10;
-const PLANET_GRAVITY = 1.0;
-const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const TRIANGLE_ASPECT_RATIO = 2.0;
-const FORCE_POINTINESS_SCALE = 10.0;
-const PRESSURE_STRENGTH = 5.0;
-const REST_DISTANCE = PARTICLE_SIZE * 2;
-const FORCE_TO_VELOCITY_SCALE = 0.1;
 export class Particle {
     constructor(x, y) {
         this.force = new Coor(0, 0);

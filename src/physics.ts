@@ -1,33 +1,38 @@
 import { Second } from './types.js';
 import { globalTimers } from './timers.js';
 
+const PARTICLE_SIZE = 0.01;
+const GRID_SIZE = 25; // particle count = GRID_SIZE^2
+const GRID_DISTANCE = PARTICLE_SIZE * 2;
+
+const PLANET_GRAVITY = 1.0;
+const PRESSURE_STRENGTH = 30.0;
+const FORCE_TO_VELOCITY_SCALE = 0.3;
+
+const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
+const TRIANGLE_ASPECT_RATIO = 2.0;
+const FORCE_POINTINESS_SCALE = 10.0;
+
+const REST_DISTANCE = PARTICLE_SIZE * 2;
+
+export const VIEWPORT_ZOOM = 4.0;
+
 const physicsTimer = globalTimers.get('worldStep');
 
 export class Coor {
     constructor(public x: number, public y: number) {}
-    
+
     add(other: Coor): Coor { return new Coor(this.x + other.x, this.y + other.y); }
     subtract(other: Coor): Coor { return new Coor(this.x - other.x, this.y - other.y); }
     multiply(scalar: number): Coor { return new Coor(this.x * scalar, this.y * scalar); }
     distance(): number { return Math.sqrt(this.x * this.x + this.y * this.y); }
     distanceTo(other: Coor): number { return this.subtract(other).distance(); }
     normalize(): Coor { const d = this.distance(); return d > 0 ? this.multiply(1/d) : new Coor(0, 0); }
-    
+
     addInPlace(other: Coor): void { this.x += other.x; this.y += other.y; }
     subtractInPlace(other: Coor): void { this.x -= other.x; this.y -= other.y; }
     multiplyInPlace(scalar: number): void { this.x *= scalar; this.y *= scalar; }
 }
-
-const PARTICLE_SIZE = 0.01;
-const GRID_DISTANCE = PARTICLE_SIZE * 2;
-const GRID_SIZE = 10;
-const PLANET_GRAVITY = 1.0;
-const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const TRIANGLE_ASPECT_RATIO = 2.0;
-const FORCE_POINTINESS_SCALE = 10.0;
-const PRESSURE_STRENGTH = 5.0;
-const REST_DISTANCE = PARTICLE_SIZE * 2;
-const FORCE_TO_VELOCITY_SCALE = 0.1;
 
 export class Particle {
     public position: Coor;
@@ -138,7 +143,7 @@ export class PhysicalWorld {
 
     calculateForces(): void {
         this.calculatePressureForces();
-        
+
         for (const particle of this.particles) {
             particle.calculateGravityForce();
             particle.sumUpForces();
@@ -156,13 +161,13 @@ export class PhysicalWorld {
 
     step(deltaTime: Second): void {
         physicsTimer.start();
-        
+
         this.calculateForces();
 
         for (const particle of this.particles) {
             particle.moveByForce(deltaTime);
         }
-        
+
         physicsTimer.end();
     }
 }

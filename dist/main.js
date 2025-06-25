@@ -1,4 +1,4 @@
-import { PhysicalWorld } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM } from './physics.js';
 import { msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 class AnimationLoop {
@@ -88,7 +88,7 @@ function render(gl) {
     const invAspectRatioLocation = gl.getUniformLocation(shaderProgram, 'u_invAspectRatio');
     const invAspectRatio = gl.canvas.height / gl.canvas.width;
     gl.uniform2f(viewCenterLocation, 0.0, 0.0); // Camera center
-    gl.uniform1f(viewScaleLocation, 4.0); // Zoom level
+    gl.uniform1f(viewScaleLocation, VIEWPORT_ZOOM); // Zoom level
     gl.uniform1f(invAspectRatioLocation, invAspectRatio);
     const vertexArray = world.getAllTriangleVertices();
     // Update vertex buffer
