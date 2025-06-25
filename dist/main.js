@@ -85,16 +85,7 @@ function render(gl) {
     gl.uniform2f(viewCenterLocation, 0.0, 0.0); // Camera center
     gl.uniform1f(viewScaleLocation, 4.0); // Zoom level
     gl.uniform1f(invAspectRatioLocation, invAspectRatio);
-    // Generate vertices from particles
-    const vertices = [];
-    for (const particle of world.particles) {
-        const size = 0.005;
-        vertices.push(particle.position.x, particle.position.y + size, // Top
-        particle.position.x - size, particle.position.y - size, // Bottom left
-        particle.position.x + size, particle.position.y - size // Bottom right
-        );
-    }
-    const vertexArray = new Float32Array(vertices);
+    const vertexArray = world.getAllTriangleVertices();
     // Update vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.DYNAMIC_DRAW);
