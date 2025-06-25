@@ -1,10 +1,12 @@
 import { PhysicalWorld } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
+import { globalTimers } from './timers.js';
 
 class AnimationLoop {
     private lastTime: Millisecond = 0;
     private world: PhysicalWorld;
     private gl: WebGLRenderingContext;
+    private totalTimer = globalTimers.get('total');
 
     constructor(world: PhysicalWorld, gl: WebGLRenderingContext) {
         this.world = world;
@@ -13,12 +15,17 @@ class AnimationLoop {
 
     start(): void {
         const animate = (currentTime: Millisecond): void => {
+            this.totalTimer.start();
+            
             const deltaTimeMs = currentTime - this.lastTime;
             const deltaTimeS = msToSeconds(deltaTimeMs);
             this.lastTime = currentTime;
 
             this.world.step(deltaTimeS);
             render(this.gl);
+            
+            this.totalTimer.end();
+            globalTimers.logPeriodically();
             requestAnimationFrame(animate);
         };
         requestAnimationFrame(animate);

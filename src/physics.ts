@@ -1,4 +1,7 @@
 import { Second } from './types.js';
+import { globalTimers } from './timers.js';
+
+const physicsTimer = globalTimers.get('worldStep');
 
 export class Coor {
     constructor(public x: number, public y: number) {}
@@ -152,10 +155,14 @@ export class PhysicalWorld {
     }
 
     step(deltaTime: Second): void {
+        physicsTimer.start();
+        
         this.calculateForces();
 
         for (const particle of this.particles) {
             particle.moveByForce(deltaTime);
         }
+        
+        physicsTimer.end();
     }
 }

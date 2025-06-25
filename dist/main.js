@@ -1,18 +1,23 @@
 import { PhysicalWorld } from './physics.js';
 import { msToSeconds } from './types.js';
+import { globalTimers } from './timers.js';
 class AnimationLoop {
     constructor(world, gl) {
         this.lastTime = 0;
+        this.totalTimer = globalTimers.get('total');
         this.world = world;
         this.gl = gl;
     }
     start() {
         const animate = (currentTime) => {
+            this.totalTimer.start();
             const deltaTimeMs = currentTime - this.lastTime;
             const deltaTimeS = msToSeconds(deltaTimeMs);
             this.lastTime = currentTime;
             this.world.step(deltaTimeS);
             render(this.gl);
+            this.totalTimer.end();
+            globalTimers.logPeriodically();
             requestAnimationFrame(animate);
         };
         requestAnimationFrame(animate);

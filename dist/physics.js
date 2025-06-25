@@ -1,3 +1,5 @@
+import { globalTimers } from './timers.js';
+const physicsTimer = globalTimers.get('worldStep');
 export class Coor {
     constructor(x, y) {
         this.x = x;
@@ -123,9 +125,11 @@ export class PhysicalWorld {
         return new Float32Array(vertices);
     }
     step(deltaTime) {
+        physicsTimer.start();
         this.calculateForces();
         for (const particle of this.particles) {
             particle.moveByForce(deltaTime);
         }
+        physicsTimer.end();
     }
 }
