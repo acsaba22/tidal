@@ -47,6 +47,14 @@ npm run build
 npm run watch
 ```
 
+## Start local web server
+
+To have http://localhost:8000 in browser run:
+
+```bash
+python3 -m http.server 8000
+```
+
 ## Cleanup
 
 ```bash
