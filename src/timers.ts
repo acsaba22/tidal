@@ -87,20 +87,3 @@ export const globalTimers = new Timers();
 // Register timers we'll use
 globalTimers.register(['total', 'worldStep']);
 
-// Decorator function
-export function timeMethod(timer: Timer) {
-    return function<T extends (...args: any[]) => any>(
-        target: any, 
-        propertyKey: string, 
-        descriptor: TypedPropertyDescriptor<T>
-    ): TypedPropertyDescriptor<T> {
-        const original = descriptor.value!;
-        descriptor.value = (function(...args: any[]) {
-            timer.start();
-            const result = original.apply(this, args);
-            timer.end();
-            return result;
-        } as any) as T;
-        return descriptor;
-    };
-}
