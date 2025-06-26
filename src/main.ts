@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, setMoonGravity, setMoonDistance, moonGravity, moonDistance } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 
@@ -141,7 +141,7 @@ function initWebGL(gl: WebGLRenderingContext): boolean {
 }
 
 function render(gl: WebGLRenderingContext): void {
-    gl.clearColor(...BACKGROUND_COLOR);
+    gl.clearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     if (!particleProgram || !lineProgram || !particleBuffer || !lineBuffer) return;
@@ -202,6 +202,25 @@ function resizeCanvas(canvas: HTMLCanvasElement, gl: WebGLRenderingContext): voi
     }
 }
 
+function setupSliders(): void {
+    const moonGravitySlider = document.getElementById('moonGravity') as HTMLInputElement;
+    const moonDistanceSlider = document.getElementById('moonDistance') as HTMLInputElement;
+    const moonGravityValue = document.getElementById('moonGravityValue') as HTMLSpanElement;
+    const moonDistanceValue = document.getElementById('moonDistanceValue') as HTMLSpanElement;
+
+    moonGravitySlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonGravitySlider.value);
+        setMoonGravity(sliderValue);
+        moonGravityValue.textContent = moonGravity.toFixed(4);
+    });
+
+    moonDistanceSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonDistanceSlider.value);
+        setMoonDistance(sliderValue);
+        moonDistanceValue.textContent = Math.round(moonDistance).toString();
+    });
+}
+
 function main(): void {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     if (!canvas) {
@@ -226,6 +245,8 @@ function main(): void {
 
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
+
+    setupSliders();
 
     const animationLoop = new AnimationLoop(world, gl);
     animationLoop.start();

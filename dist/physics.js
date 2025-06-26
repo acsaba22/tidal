@@ -5,6 +5,21 @@ const GRID_DISTANCE = PARTICLE_SIZE * 2;
 const PLANET_GRAVITY = 1.0;
 const PRESSURE_STRENGTH = 20.0;
 const FORCE_TO_VELOCITY_SCALE = 0.3;
+const SLIDER_SCALE = 10;
+const MOON_GRAVITY_MIN = 0.0001;
+const MOON_GRAVITY_MAX = 0.5;
+const MOON_DISTANCE_MIN = 5;
+const MOON_DISTANCE_MAX = 2000;
+export let moonGravity = 0.012;
+export let moonDistance = 60;
+export function setMoonGravity(sliderValue) {
+    moonGravity = MOON_GRAVITY_MIN * Math.pow(MOON_GRAVITY_MAX / MOON_GRAVITY_MIN, sliderValue / SLIDER_SCALE);
+    console.log(`Moon Gravity: slider=${sliderValue}, value=${moonGravity}`);
+}
+export function setMoonDistance(sliderValue) {
+    moonDistance = MOON_DISTANCE_MIN * Math.pow(MOON_DISTANCE_MAX / MOON_DISTANCE_MIN, sliderValue / SLIDER_SCALE);
+    console.log(`Moon Distance: slider=${sliderValue}, value=${moonDistance}`);
+}
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 const FORCE_TO_POINTINESS = 1.0;
 const REST_DISTANCE = PARTICLE_SIZE * 2;

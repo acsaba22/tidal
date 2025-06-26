@@ -5,11 +5,6 @@
 Allow real-time adjustment of moon distance (including infinite distance)
 
 
-# TODOs
-
-- TODO: package.json license
-
-- TODO index.html dynamic canvas dimensions
 
 
 ## Tech Stack

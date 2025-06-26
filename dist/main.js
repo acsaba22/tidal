@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, setMoonGravity, setMoonDistance, moonGravity, moonDistance } from './physics.js';
 import { msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 // Color constants
@@ -117,7 +117,7 @@ function initWebGL(gl) {
     return true;
 }
 function render(gl) {
-    gl.clearColor(...BACKGROUND_COLOR);
+    gl.clearColor(BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2], BACKGROUND_COLOR[3]);
     gl.clear(gl.COLOR_BUFFER_BIT);
     if (!particleProgram || !lineProgram || !particleBuffer || !lineBuffer)
         return;
@@ -162,6 +162,22 @@ function resizeCanvas(canvas, gl) {
         render(gl);
     }
 }
+function setupSliders() {
+    const moonGravitySlider = document.getElementById('moonGravity');
+    const moonDistanceSlider = document.getElementById('moonDistance');
+    const moonGravityValue = document.getElementById('moonGravityValue');
+    const moonDistanceValue = document.getElementById('moonDistanceValue');
+    moonGravitySlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonGravitySlider.value);
+        setMoonGravity(sliderValue);
+        moonGravityValue.textContent = moonGravity.toFixed(4);
+    });
+    moonDistanceSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonDistanceSlider.value);
+        setMoonDistance(sliderValue);
+        moonDistanceValue.textContent = Math.round(moonDistance).toString();
+    });
+}
 function main() {
     const canvas = document.getElementById('canvas');
     if (!canvas) {
@@ -181,6 +197,7 @@ function main() {
     world = new PhysicalWorld();
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
+    setupSliders();
     const animationLoop = new AnimationLoop(world, gl);
     animationLoop.start();
 }
