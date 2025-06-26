@@ -12,13 +12,22 @@ const MOON_DISTANCE_MIN = 5;
 const MOON_DISTANCE_MAX = 2000;
 export let moonGravity = 0.012;
 export let moonDistance = 60;
+export let moonMass = 0;
+export let moonPlanetCenterDistance = 0;
+function updateMoonMass() {
+    // moonMass calculated so moon gravity at origin equals moonGravity * earthGravity
+    moonMass = moonGravity * moonDistance * moonDistance * PLANET_GRAVITY;
+    // Center of mass distance from Earth (assuming Earth mass = PLANET_GRAVITY)
+    moonPlanetCenterDistance = moonMass * moonDistance / (PLANET_GRAVITY + moonMass);
+    console.log(`Moon params: gravity=${moonGravity.toFixed(4)}, distance=${moonDistance.toFixed(1)}, mass=${moonMass.toFixed(2)}, center=${moonPlanetCenterDistance.toFixed(2)}`);
+}
 export function setMoonGravity(sliderValue) {
     moonGravity = MOON_GRAVITY_MIN * Math.pow(MOON_GRAVITY_MAX / MOON_GRAVITY_MIN, sliderValue / SLIDER_SCALE);
-    console.log(`Moon Gravity: slider=${sliderValue}, value=${moonGravity}`);
+    updateMoonMass();
 }
 export function setMoonDistance(sliderValue) {
     moonDistance = MOON_DISTANCE_MIN * Math.pow(MOON_DISTANCE_MAX / MOON_DISTANCE_MIN, sliderValue / SLIDER_SCALE);
-    console.log(`Moon Distance: slider=${sliderValue}, value=${moonDistance}`);
+    updateMoonMass();
 }
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 const FORCE_TO_POINTINESS = 1.0;

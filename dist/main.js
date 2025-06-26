@@ -177,6 +177,8 @@ function setupSliders() {
         setMoonDistance(sliderValue);
         moonDistanceValue.textContent = Math.round(moonDistance).toString();
     });
+    // Trigger initial update
+    moonGravitySlider.dispatchEvent(new Event('input'));
 }
 function main() {
     const canvas = document.getElementById('canvas');
