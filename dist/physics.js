@@ -1,15 +1,14 @@
 import { globalTimers } from './timers.js';
-const PARTICLE_SIZE = 0.01;
-const GRID_SIZE = 25; // particle count = GRID_SIZE^2
+const PARTICLE_SIZE = 0.06;
+const GRID_SIZE = 32; // particle count = GRID_SIZE^2
 const GRID_DISTANCE = PARTICLE_SIZE * 2;
 const PLANET_GRAVITY = 1.0;
-const PRESSURE_STRENGTH = 30.0;
+const PRESSURE_STRENGTH = 20.0;
 const FORCE_TO_VELOCITY_SCALE = 0.3;
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const TRIANGLE_ASPECT_RATIO = 2.0;
-const FORCE_POINTINESS_SCALE = 10.0;
+const FORCE_TO_POINTINESS = 1.0;
 const REST_DISTANCE = PARTICLE_SIZE * 2;
-export const VIEWPORT_ZOOM = 4.0;
+export const VIEWPORT_ZOOM = 0.5;
 const physicsTimer = globalTimers.get('worldStep');
 export class Coor {
     constructor(x, y) {
@@ -50,18 +49,18 @@ export class Particle {
         const pointingForce = this.gravityForce;
         const forceLength = pointingForce.distance();
         if (forceLength === 0) {
-            // Default upward triangle if no force
+            // Default upward triangle with equal sides (aspect ratio 1.0)
             return [
                 this.position.x, this.position.y + TRIANGLE_SIZE,
-                this.position.x - TRIANGLE_SIZE / TRIANGLE_ASPECT_RATIO, this.position.y - TRIANGLE_SIZE,
-                this.position.x + TRIANGLE_SIZE / TRIANGLE_ASPECT_RATIO, this.position.y - TRIANGLE_SIZE
+                this.position.x - TRIANGLE_SIZE, this.position.y - TRIANGLE_SIZE,
+                this.position.x + TRIANGLE_SIZE, this.position.y - TRIANGLE_SIZE
             ];
         }
         // Normalize force direction
         const direction = pointingForce.multiply(1 / forceLength);
         // Calculate triangle vertices pointing in force direction
-        const forceAspectRatio = 1.0 + TRIANGLE_ASPECT_RATIO * (forceLength * FORCE_POINTINESS_SCALE);
-        const halfWidth = TRIANGLE_SIZE / forceAspectRatio;
+        const aspectRatio = 1.0 + forceLength * FORCE_TO_POINTINESS;
+        const halfWidth = TRIANGLE_SIZE / aspectRatio;
         const height = TRIANGLE_SIZE;
         // Tip point (in force direction)
         const tip = this.position.add(direction.multiply(height));
