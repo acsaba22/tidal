@@ -23,10 +23,10 @@ export let moonPlanetCenterDistance = 0;
 function updateMoonMass(): void {
     // moonMass calculated so moon gravity at origin equals moonGravity * earthGravity
     moonMass = moonGravity * moonDistance * moonDistance * PLANET_GRAVITY;
-    
+
     // Center of mass distance from Earth (assuming Earth mass = PLANET_GRAVITY)
     moonPlanetCenterDistance = moonMass * moonDistance / (PLANET_GRAVITY + moonMass);
-    
+
     console.log(`Moon params: gravity=${moonGravity.toFixed(4)}, distance=${moonDistance.toFixed(1)}, mass=${moonMass.toFixed(2)}, center=${moonPlanetCenterDistance.toFixed(2)}`);
 }
 
@@ -63,6 +63,8 @@ export class Coor {
     addInPlace(other: Coor): void { this.x += other.x; this.y += other.y; }
     subtractInPlace(other: Coor): void { this.x -= other.x; this.y -= other.y; }
     multiplyInPlace(scalar: number): void { this.x *= scalar; this.y *= scalar; }
+
+    toString(): string { return `(${this.x.toFixed(3)}, ${this.y.toFixed(3)})`; }
 }
 
 export class Particle {
@@ -70,6 +72,8 @@ export class Particle {
     public force: Coor = new Coor(0, 0);
     public gravityForce: Coor = new Coor(0, 0);
     public pressureForce: Coor = new Coor(0, 0);
+    public moonGravityForce: Coor = new Coor(0, 0);
+    public centrifugalForce: Coor = new Coor(0, 0);
 
     constructor(x: number, y: number) {
         this.position = new Coor(x, y);
@@ -83,8 +87,35 @@ export class Particle {
         this.pressureForce = new Coor(0, 0);
     }
 
+    calculateMoonGravityForce(): void {
+        const moonPosition = new Coor(moonDistance, 0);
+        const diff = moonPosition.subtract(this.position);
+        const distance = diff.distance();
+
+        if (distance > 0) {
+            const forceMagnitude = moonMass / (distance * distance);
+            this.moonGravityForce = diff.normalize().multiply(forceMagnitude);
+        } else {
+            this.moonGravityForce = new Coor(0, 0);
+        }
+    }
+
+    calculateCentrifugalForce(): void {
+        // Centrifugal force only in x-direction, linear from center, equals moonGravity at x=0
+        const xDistanceFromCenter = this.position.x - moonPlanetCenterDistance;
+        const forceMagnitude = moonGravity * xDistanceFromCenter / moonPlanetCenterDistance;
+        this.centrifugalForce = new Coor(forceMagnitude, 0);
+    }
+
     sumUpForces(): void {
         this.force = this.gravityForce.add(this.pressureForce);
+        this.force.addInPlace(this.moonGravityForce);
+        this.force.addInPlace(this.centrifugalForce);
+
+        // Debug logging 1 in 100k particles
+        if (Math.random() < 0.00001) {
+            console.log(`Particle at ${this.position.toString()}: gravity=${this.gravityForce.toString()}, moon=${this.moonGravityForce.toString()}, centrifugal=${this.centrifugalForce.toString()}, total=${this.force.toString()}`);
+        }
     }
 
     moveByForce(deltaTime: Second): void {
@@ -93,7 +124,7 @@ export class Particle {
     }
 
     getTriangleVertices(): number[] {
-        const pointingForce: Coor = this.gravityForce;
+        const pointingForce: Coor = this.moonGravityForce;
         const forceLength = pointingForce.distance();
 
         if (forceLength === 0) {
@@ -177,6 +208,8 @@ export class PhysicalWorld {
 
         for (const particle of this.particles) {
             particle.calculateGravityForce();
+            particle.calculateMoonGravityForce();
+            particle.calculateCentrifugalForce();
             particle.sumUpForces();
         }
     }

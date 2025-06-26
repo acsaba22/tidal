@@ -48,12 +48,15 @@ export class Coor {
     addInPlace(other) { this.x += other.x; this.y += other.y; }
     subtractInPlace(other) { this.x -= other.x; this.y -= other.y; }
     multiplyInPlace(scalar) { this.x *= scalar; this.y *= scalar; }
+    toString() { return `(${this.x.toFixed(3)}, ${this.y.toFixed(3)})`; }
 }
 export class Particle {
     constructor(x, y) {
         this.force = new Coor(0, 0);
         this.gravityForce = new Coor(0, 0);
         this.pressureForce = new Coor(0, 0);
+        this.moonGravityForce = new Coor(0, 0);
+        this.centrifugalForce = new Coor(0, 0);
         this.position = new Coor(x, y);
     }
     calculateGravityForce() {
@@ -62,15 +65,39 @@ export class Particle {
     clearPressureForce() {
         this.pressureForce = new Coor(0, 0);
     }
+    calculateMoonGravityForce() {
+        const moonPosition = new Coor(moonDistance, 0);
+        const diff = moonPosition.subtract(this.position);
+        const distance = diff.distance();
+        if (distance > 0) {
+            const forceMagnitude = moonMass / (distance * distance);
+            this.moonGravityForce = diff.normalize().multiply(forceMagnitude);
+        }
+        else {
+            this.moonGravityForce = new Coor(0, 0);
+        }
+    }
+    calculateCentrifugalForce() {
+        // Centrifugal force only in x-direction, linear from center, equals moonGravity at x=0
+        const xDistanceFromCenter = this.position.x - moonPlanetCenterDistance;
+        const forceMagnitude = moonGravity * xDistanceFromCenter / moonPlanetCenterDistance;
+        this.centrifugalForce = new Coor(forceMagnitude, 0);
+    }
     sumUpForces() {
         this.force = this.gravityForce.add(this.pressureForce);
+        this.force.addInPlace(this.moonGravityForce);
+        this.force.addInPlace(this.centrifugalForce);
+        // Debug logging 1 in 100k particles
+        if (Math.random() < 0.00001) {
+            console.log(`Particle at ${this.position.toString()}: gravity=${this.gravityForce.toString()}, moon=${this.moonGravityForce.toString()}, centrifugal=${this.centrifugalForce.toString()}, total=${this.force.toString()}`);
+        }
     }
     moveByForce(deltaTime) {
         this.position.x += this.force.x * deltaTime * FORCE_TO_VELOCITY_SCALE;
         this.position.y += this.force.y * deltaTime * FORCE_TO_VELOCITY_SCALE;
     }
     getTriangleVertices() {
-        const pointingForce = this.gravityForce;
+        const pointingForce = this.moonGravityForce;
         const forceLength = pointingForce.distance();
         if (forceLength === 0) {
             // Default upward triangle with equal sides (aspect ratio 1.0)
@@ -137,6 +164,8 @@ export class PhysicalWorld {
         this.calculatePressureForces();
         for (const particle of this.particles) {
             particle.calculateGravityForce();
+            particle.calculateMoonGravityForce();
+            particle.calculateCentrifugalForce();
             particle.sumUpForces();
         }
     }
