@@ -39,7 +39,7 @@ const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 
 const REST_DISTANCE = PARTICLE_SIZE * 2;
 
-export const VIEWPORT_ZOOM = 0.5;
+export const VIEWPORT_ZOOM = 0.4;
 
 
 export let moonGravityMagnitudeAtOrigo = 0;

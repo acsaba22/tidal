@@ -25,7 +25,7 @@ const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 const SHAPE_LOG_INTERVAL_MS = 1000;
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 const REST_DISTANCE = PARTICLE_SIZE * 2;
-export const VIEWPORT_ZOOM = 0.5;
+export const VIEWPORT_ZOOM = 0.4;
 export let moonGravityMagnitudeAtOrigo = 0;
 // Triangle pointing mode: M=moon, C=centrifugal, E=earth, MC=moon+centrifugal, MCE=all
 export let pointingMode = 'MC';
