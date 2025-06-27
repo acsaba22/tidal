@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, SLIDER_SCALE, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 
@@ -208,6 +208,12 @@ function setupSliders(): void {
     const moonPointingDistanceSlider = document.getElementById('moonPointingDistance') as HTMLInputElement;
     const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance') as HTMLInputElement;
     const pointinessSlider = document.getElementById('pointiness') as HTMLInputElement;
+    
+    // Set slider ranges from constant
+    [moonMassSlider, moonStrengthDistanceSlider, moonPointingDistanceSlider, rotationCenterDistanceSlider, pointinessSlider].forEach(slider => {
+        slider.max = SLIDER_SCALE.toString();
+        slider.value = (SLIDER_SCALE / 2).toString();
+    });
     
     const moonMassValue = document.getElementById('moonMassValue') as HTMLSpanElement;
     const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue') as HTMLSpanElement;
