@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
 import { msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 // Color constants
@@ -167,10 +167,12 @@ function setupSliders() {
     const moonStrengthDistanceSlider = document.getElementById('moonStrengthDistance');
     const moonPointingDistanceSlider = document.getElementById('moonPointingDistance');
     const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance');
+    const pointinessSlider = document.getElementById('pointiness');
     const moonMassValue = document.getElementById('moonMassValue');
     const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue');
     const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue');
     const rotationCenterDistanceValue = document.getElementById('rotationCenterDistanceValue');
+    const pointinessValue = document.getElementById('pointinessValue');
     moonMassSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(moonMassSlider.value);
         setMoonMass(sliderValue);
@@ -190,6 +192,21 @@ function setupSliders() {
         const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
         setRotationCenterDistance(sliderValue);
         rotationCenterDistanceValue.textContent = rotationCenterDistance.toFixed(1);
+    });
+    pointinessSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(pointinessSlider.value);
+        setPointiness(sliderValue);
+        pointinessValue.textContent = pointiness.toFixed(1);
+    });
+    // Setup radio buttons
+    const pointingRadios = document.querySelectorAll('input[name="pointing"]');
+    pointingRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const target = e.target;
+            if (target.checked) {
+                setPointingMode(target.value);
+            }
+        });
     });
     // Trigger initial update
     moonMassSlider.dispatchEvent(new Event('input'));

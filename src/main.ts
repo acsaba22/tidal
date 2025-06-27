@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 
@@ -207,11 +207,13 @@ function setupSliders(): void {
     const moonStrengthDistanceSlider = document.getElementById('moonStrengthDistance') as HTMLInputElement;
     const moonPointingDistanceSlider = document.getElementById('moonPointingDistance') as HTMLInputElement;
     const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance') as HTMLInputElement;
+    const pointinessSlider = document.getElementById('pointiness') as HTMLInputElement;
     
     const moonMassValue = document.getElementById('moonMassValue') as HTMLSpanElement;
     const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue') as HTMLSpanElement;
     const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue') as HTMLSpanElement;
     const rotationCenterDistanceValue = document.getElementById('rotationCenterDistanceValue') as HTMLSpanElement;
+    const pointinessValue = document.getElementById('pointinessValue') as HTMLSpanElement;
 
     moonMassSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(moonMassSlider.value);
@@ -235,6 +237,23 @@ function setupSliders(): void {
         const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
         setRotationCenterDistance(sliderValue);
         rotationCenterDistanceValue.textContent = rotationCenterDistance.toFixed(1);
+    });
+
+    pointinessSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(pointinessSlider.value);
+        setPointiness(sliderValue);
+        pointinessValue.textContent = pointiness.toFixed(1);
+    });
+
+    // Setup radio buttons
+    const pointingRadios = document.querySelectorAll('input[name="pointing"]');
+    pointingRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const target = e.target as HTMLInputElement;
+            if (target.checked) {
+                setPointingMode(target.value);
+            }
+        });
     });
 
     // Trigger initial update

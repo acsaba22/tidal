@@ -14,16 +14,20 @@ const MOON_POINTING_DISTANCE_MIN = 5;
 const MOON_POINTING_DISTANCE_MAX = 2000;
 const ROTATION_CENTER_DISTANCE_MIN = 0.1;
 const ROTATION_CENTER_DISTANCE_MAX = 50;
+const POINTINESS_MIN = -1;
+const POINTINESS_MAX = 10;
 const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const FORCE_TO_POINTINESS = 10.0;
 const REST_DISTANCE = PARTICLE_SIZE * 2;
 export const VIEWPORT_ZOOM = 0.5;
 export let moonMass = 1.0;
 export let moonStrengthDistance = 60;
 export let moonPointingDistance = 60;
 export let rotationCenterDistance = 5.0;
+export let pointiness = 1.0;
 export let moonGravityMagnitudeAtOrigo = 0;
+// Triangle pointing mode: M=moon, C=centrifugal, E=earth, MC=moon+centrifugal, MCE=all
+export let pointingMode = 'MC';
 const physicsTimer = globalTimers.get('worldStep');
 function updateMoonParams() {
     // Calculate moon gravity magnitude at origin (0,0)
@@ -48,6 +52,12 @@ export function setMoonPointingDistance(sliderValue) {
 export function setRotationCenterDistance(sliderValue) {
     rotationCenterDistance = logarithmicScale(sliderValue, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX);
     updateMoonParams();
+}
+export function setPointiness(sliderValue) {
+    pointiness = POINTINESS_MIN + (POINTINESS_MAX - POINTINESS_MIN) * (sliderValue / SLIDER_SCALE);
+}
+export function setPointingMode(mode) {
+    pointingMode = mode;
 }
 export class Coor {
     constructor(x, y) {
@@ -114,8 +124,13 @@ export class Particle {
         this.position.y += this.force.y * deltaTime * FORCE_TO_VELOCITY_SCALE;
     }
     getTriangleVertices() {
-        const pointingForce = this.moonGravityForce.add(this.centrifugalForce);
-        // const pointingForce: Coor = this.centrifugalForce;
+        let pointingForce = new Coor(0, 0);
+        if (pointingMode.includes('M'))
+            pointingForce.addInPlace(this.moonGravityForce);
+        if (pointingMode.includes('C'))
+            pointingForce.addInPlace(this.centrifugalForce);
+        if (pointingMode.includes('E'))
+            pointingForce.addInPlace(this.gravityForce);
         const forceLength = pointingForce.distance();
         if (forceLength === 0) {
             // Default upward triangle with equal sides (aspect ratio 1.0)
@@ -128,7 +143,7 @@ export class Particle {
         // Normalize force direction
         const direction = pointingForce.multiply(1 / forceLength);
         // Calculate triangle vertices pointing in force direction
-        const aspectRatio = 1.0 + forceLength * FORCE_TO_POINTINESS;
+        const aspectRatio = 1.0 + forceLength * Math.pow(10, pointiness);
         const halfWidth = TRIANGLE_SIZE / aspectRatio;
         const height = TRIANGLE_SIZE;
         // Tip point (in force direction)
