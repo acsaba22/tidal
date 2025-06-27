@@ -6,34 +6,49 @@ const PLANET_GRAVITY = 1.0;
 const PRESSURE_STRENGTH = 20.0;
 const FORCE_TO_VELOCITY_SCALE = 0.3;
 const SLIDER_SCALE = 10;
-const MOON_GRAVITY_MIN = 0.0001;
-const MOON_GRAVITY_MAX = 0.5;
-const MOON_DISTANCE_MIN = 5;
-const MOON_DISTANCE_MAX = 2000;
-export let moonGravity = 0.012;
-export let moonDistance = 60;
-export let moonMass = 0;
-export let moonPlanetCenterDistance = 0;
-function updateMoonMass() {
-    // moonMass calculated so moon gravity at origin equals moonGravity * earthGravity
-    moonMass = moonGravity * moonDistance * moonDistance * PLANET_GRAVITY;
-    // Center of mass distance from Earth (assuming Earth mass = PLANET_GRAVITY)
-    moonPlanetCenterDistance = moonMass * moonDistance / (PLANET_GRAVITY + moonMass);
-    console.log(`Moon params: gravity=${moonGravity.toFixed(4)}, distance=${moonDistance.toFixed(1)}, mass=${moonMass.toFixed(2)}, center=${moonPlanetCenterDistance.toFixed(2)}`);
-}
-export function setMoonGravity(sliderValue) {
-    moonGravity = MOON_GRAVITY_MIN * Math.pow(MOON_GRAVITY_MAX / MOON_GRAVITY_MIN, sliderValue / SLIDER_SCALE);
-    updateMoonMass();
-}
-export function setMoonDistance(sliderValue) {
-    moonDistance = MOON_DISTANCE_MIN * Math.pow(MOON_DISTANCE_MAX / MOON_DISTANCE_MIN, sliderValue / SLIDER_SCALE);
-    updateMoonMass();
-}
+const MOON_MASS_MIN = 0.001;
+const MOON_MASS_MAX = 10.0;
+const MOON_STRENGTH_DISTANCE_MIN = 5;
+const MOON_STRENGTH_DISTANCE_MAX = 2000;
+const MOON_POINTING_DISTANCE_MIN = 5;
+const MOON_POINTING_DISTANCE_MAX = 2000;
+const ROTATION_CENTER_DISTANCE_MIN = 0.1;
+const ROTATION_CENTER_DISTANCE_MAX = 50;
+const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const FORCE_TO_POINTINESS = 1.0;
+const FORCE_TO_POINTINESS = 10.0;
 const REST_DISTANCE = PARTICLE_SIZE * 2;
 export const VIEWPORT_ZOOM = 0.5;
+export let moonMass = 1.0;
+export let moonStrengthDistance = 60;
+export let moonPointingDistance = 60;
+export let rotationCenterDistance = 5.0;
+export let moonGravityMagnitudeAtOrigo = 0;
 const physicsTimer = globalTimers.get('worldStep');
+function updateMoonParams() {
+    // Calculate moon gravity magnitude at origin (0,0)
+    moonGravityMagnitudeAtOrigo = moonMass / (moonStrengthDistance * moonStrengthDistance);
+    console.log(`Moon params: mass=${moonMass.toFixed(2)}, strengthDist=${moonStrengthDistance.toFixed(1)}, pointingDist=${moonPointingDistance.toFixed(1)}, rotationCenter=${rotationCenterDistance.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
+}
+function logarithmicScale(sliderValue, min, max) {
+    return min * Math.pow(max / min, sliderValue / SLIDER_SCALE);
+}
+export function setMoonMass(sliderValue) {
+    moonMass = logarithmicScale(sliderValue, MOON_MASS_MIN, MOON_MASS_MAX);
+    updateMoonParams();
+}
+export function setMoonStrengthDistance(sliderValue) {
+    moonStrengthDistance = logarithmicScale(sliderValue, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX);
+    updateMoonParams();
+}
+export function setMoonPointingDistance(sliderValue) {
+    moonPointingDistance = logarithmicScale(sliderValue, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX);
+    updateMoonParams();
+}
+export function setRotationCenterDistance(sliderValue) {
+    rotationCenterDistance = logarithmicScale(sliderValue, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX);
+    updateMoonParams();
+}
 export class Coor {
     constructor(x, y) {
         this.x = x;
@@ -66,30 +81,32 @@ export class Particle {
         this.pressureForce = new Coor(0, 0);
     }
     calculateMoonGravityForce() {
-        const moonPosition = new Coor(moonDistance, 0);
-        const diff = moonPosition.subtract(this.position);
-        const distance = diff.distance();
-        if (distance > 0) {
-            const forceMagnitude = moonMass / (distance * distance);
-            this.moonGravityForce = diff.normalize().multiply(forceMagnitude);
+        const moonStrengthPosition = new Coor(moonStrengthDistance, 0);
+        const strengthDiff = moonStrengthPosition.subtract(this.position);
+        const strengthDistance = strengthDiff.distance();
+        if (strengthDistance > 0) {
+            const forceMagnitude = moonMass / (strengthDistance * strengthDistance);
+            const moonPointingPosition = new Coor(moonPointingDistance, 0);
+            const pointingDiff = moonPointingPosition.subtract(this.position);
+            this.moonGravityForce = pointingDiff.normalize().multiply(forceMagnitude);
         }
         else {
             this.moonGravityForce = new Coor(0, 0);
         }
     }
     calculateCentrifugalForce() {
-        // Centrifugal force only in x-direction, linear from center, equals moonGravity at x=0
-        const xDistanceFromCenter = this.position.x - moonPlanetCenterDistance;
-        const forceMagnitude = moonGravity * xDistanceFromCenter / moonPlanetCenterDistance;
+        // Centrifugal force only in x-direction, linear from center
+        const xDistanceFromCenter = this.position.x - rotationCenterDistance;
+        const forceMagnitude = moonGravityMagnitudeAtOrigo * xDistanceFromCenter / rotationCenterDistance;
         this.centrifugalForce = new Coor(forceMagnitude, 0);
     }
     sumUpForces() {
         this.force = this.gravityForce.add(this.pressureForce);
         this.force.addInPlace(this.moonGravityForce);
         this.force.addInPlace(this.centrifugalForce);
-        // Debug logging 1 in 100k particles
-        if (Math.random() < 0.00001) {
-            console.log(`Particle at ${this.position.toString()}: gravity=${this.gravityForce.toString()}, moon=${this.moonGravityForce.toString()}, centrifugal=${this.centrifugalForce.toString()}, total=${this.force.toString()}`);
+        if (Math.random() < 1 / PARTICLE_LOG_FREQUENCY) {
+            const tidalForce = this.moonGravityForce.add(this.centrifugalForce).distance();
+            console.log(`Particle at ${this.position.toString()}: gravity=${this.gravityForce.distance().toExponential(2)}, moon=${this.moonGravityForce.distance().toExponential(2)}, centrifugal=${this.centrifugalForce.distance().toExponential(2)}, tidal=${tidalForce.toExponential(2)}`);
         }
     }
     moveByForce(deltaTime) {
@@ -97,7 +114,8 @@ export class Particle {
         this.position.y += this.force.y * deltaTime * FORCE_TO_VELOCITY_SCALE;
     }
     getTriangleVertices() {
-        const pointingForce = this.moonGravityForce;
+        const pointingForce = this.moonGravityForce.add(this.centrifugalForce);
+        // const pointingForce: Coor = this.centrifugalForce;
         const forceLength = pointingForce.distance();
         if (forceLength === 0) {
             // Default upward triangle with equal sides (aspect ratio 1.0)

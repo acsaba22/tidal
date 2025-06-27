@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, setMoonGravity, setMoonDistance, moonGravity, moonDistance } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 
@@ -203,25 +203,42 @@ function resizeCanvas(canvas: HTMLCanvasElement, gl: WebGLRenderingContext): voi
 }
 
 function setupSliders(): void {
-    const moonGravitySlider = document.getElementById('moonGravity') as HTMLInputElement;
-    const moonDistanceSlider = document.getElementById('moonDistance') as HTMLInputElement;
-    const moonGravityValue = document.getElementById('moonGravityValue') as HTMLSpanElement;
-    const moonDistanceValue = document.getElementById('moonDistanceValue') as HTMLSpanElement;
+    const moonMassSlider = document.getElementById('moonMass') as HTMLInputElement;
+    const moonStrengthDistanceSlider = document.getElementById('moonStrengthDistance') as HTMLInputElement;
+    const moonPointingDistanceSlider = document.getElementById('moonPointingDistance') as HTMLInputElement;
+    const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance') as HTMLInputElement;
+    
+    const moonMassValue = document.getElementById('moonMassValue') as HTMLSpanElement;
+    const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue') as HTMLSpanElement;
+    const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue') as HTMLSpanElement;
+    const rotationCenterDistanceValue = document.getElementById('rotationCenterDistanceValue') as HTMLSpanElement;
 
-    moonGravitySlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonGravitySlider.value);
-        setMoonGravity(sliderValue);
-        moonGravityValue.textContent = moonGravity.toFixed(4);
+    moonMassSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonMassSlider.value);
+        setMoonMass(sliderValue);
+        moonMassValue.textContent = moonMass.toFixed(2);
     });
 
-    moonDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonDistanceSlider.value);
-        setMoonDistance(sliderValue);
-        moonDistanceValue.textContent = Math.round(moonDistance).toString();
+    moonStrengthDistanceSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonStrengthDistanceSlider.value);
+        setMoonStrengthDistance(sliderValue);
+        moonStrengthDistanceValue.textContent = Math.round(moonStrengthDistance).toString();
+    });
+
+    moonPointingDistanceSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(moonPointingDistanceSlider.value);
+        setMoonPointingDistance(sliderValue);
+        moonPointingDistanceValue.textContent = Math.round(moonPointingDistance).toString();
+    });
+
+    rotationCenterDistanceSlider.addEventListener('input', () => {
+        const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
+        setRotationCenterDistance(sliderValue);
+        rotationCenterDistanceValue.textContent = rotationCenterDistance.toFixed(1);
     });
 
     // Trigger initial update
-    moonGravitySlider.dispatchEvent(new Event('input'));
+    moonMassSlider.dispatchEvent(new Event('input'));
 }
 
 function main(): void {

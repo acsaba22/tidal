@@ -28,19 +28,20 @@
             right: 0;
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 15px;
-            font-size: 14px;
+            padding: 8px;
+            font-size: 12px;
             z-index: 100;
-            display: flex;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
         }
         .control-group {
-            flex: 1;
             display: flex;
             flex-direction: column;
         }
         .control-group label {
-            margin-bottom: 5px;
+            margin-bottom: 2px;
             text-align: center;
         }
         .control-group input[type="range"] {
@@ -48,7 +49,7 @@
         }
         .value-display {
             color: #aaa;
-            font-size: 12px;
+            font-size: 10px;
         }
     </style>
 </head>
@@ -56,12 +57,20 @@
     <canvas id="canvas"></canvas>
     <div class="controls">
         <div class="control-group">
-            <label for="moonGravity">Moon Gravity: <span id="moonGravityValue" class="value-display">0.012</span></label>
-            <input type="range" id="moonGravity" min="0" max="10" step="1" value="5">
+            <label for="moonMass">Moon Mass: <span id="moonMassValue" class="value-display">1.0</span></label>
+            <input type="range" id="moonMass" min="0" max="10" step="1" value="5">
         </div>
         <div class="control-group">
-            <label for="moonDistance">Moon Distance: <span id="moonDistanceValue" class="value-display">60</span></label>
-            <input type="range" id="moonDistance" min="0" max="10" step="1" value="5">
+            <label for="moonStrengthDistance">Strength Distance: <span id="moonStrengthDistanceValue" class="value-display">60</span></label>
+            <input type="range" id="moonStrengthDistance" min="0" max="10" step="1" value="5">
+        </div>
+        <div class="control-group">
+            <label for="moonPointingDistance">Pointing Distance: <span id="moonPointingDistanceValue" class="value-display">60</span></label>
+            <input type="range" id="moonPointingDistance" min="0" max="10" step="1" value="5">
+        </div>
+        <div class="control-group">
+            <label for="rotationCenterDistance">Rotation Center: <span id="rotationCenterDistanceValue" class="value-display">5.0</span></label>
+            <input type="range" id="rotationCenterDistance" min="0" max="10" step="1" value="5">
         </div>
     </div>
     <script type="module" src="dist/main.js"></script>
