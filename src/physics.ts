@@ -10,16 +10,26 @@ const PRESSURE_STRENGTH = 20.0;
 const FORCE_TO_VELOCITY_SCALE = 0.3;
 
 export const SLIDER_SCALE = 50;
-const MOON_MASS_MIN = 0.001;
-const MOON_MASS_MAX = 10.0;
-const MOON_STRENGTH_DISTANCE_MIN = 5;
-const MOON_STRENGTH_DISTANCE_MAX = 2000;
-const MOON_POINTING_DISTANCE_MIN = 5;
-const MOON_POINTING_DISTANCE_MAX = 2000;
-const ROTATION_CENTER_DISTANCE_MIN = 0.1;
-const ROTATION_CENTER_DISTANCE_MAX = 50;
-const POINTINESS_MIN = -1;
-const POINTINESS_MAX = 10;
+
+export const MOON_MASS_MIN = 0.001;
+export let moonMass = 2.0;
+export const MOON_MASS_MAX = 10.0;
+
+export const MOON_STRENGTH_DISTANCE_MIN = 5;
+export let moonStrengthDistance = 60;
+export const MOON_STRENGTH_DISTANCE_MAX = 2000;
+
+export const MOON_POINTING_DISTANCE_MIN = 5;
+export let moonPointingDistance = 60;
+export const MOON_POINTING_DISTANCE_MAX = 2000;
+
+export const ROTATION_CENTER_DISTANCE_MIN = 0.1;
+export let rotationCenterDistance = 5.0;
+export const ROTATION_CENTER_DISTANCE_MAX = 50;
+
+export const POINTINESS_MIN = -1;
+export let pointiness = 1.0;
+export const POINTINESS_MAX = 10;
 
 const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 
@@ -32,11 +42,6 @@ const REST_DISTANCE = PARTICLE_SIZE * 2;
 export const VIEWPORT_ZOOM = 0.5;
 
 
-export let moonMass = 1.0;
-export let moonStrengthDistance = 60;
-export let moonPointingDistance = 60;
-export let rotationCenterDistance = 5.0;
-export let pointiness = 1.0;
 export let moonGravityMagnitudeAtOrigo = 0;
 // Triangle pointing mode: M=moon, C=centrifugal, E=earth, MC=moon+centrifugal, MCE=all
 export let pointingMode = 'MC';
@@ -52,6 +57,14 @@ function updateMoonParams(): void {
 
 function logarithmicScale(sliderValue: number, min: number, max: number): number {
     return min * Math.pow(max / min, sliderValue / SLIDER_SCALE);
+}
+
+export function valueToSliderPosition(value: number, min: number, max: number): number {
+    return SLIDER_SCALE * Math.log(value / min) / Math.log(max / min);
+}
+
+export function valueToLinearSliderPosition(value: number, min: number, max: number): number {
+    return SLIDER_SCALE * (value - min) / (max - min);
 }
 
 export function setMoonMass(sliderValue: number): void {
@@ -299,13 +312,13 @@ export class PhysicalWorld {
         const now = performance.now();
         if (now - this.lastShapeLogTime >= SHAPE_LOG_INTERVAL_MS) {
             console.log(`Shape: shapeDiff=${this.shapeDiffAvg.toExponential(2)}, meanX=${this.meanXAvg.toExponential(2)}`);
-            
+
             // Update UI display
             const shapeMetricElement = document.getElementById('shapeMetric');
             if (shapeMetricElement) {
                 shapeMetricElement.textContent = this.shapeDiffAvg.toExponential(2);
             }
-            
+
             // Reset for next period
             this.shapeDiffAvg = 0;
             this.meanXAvg = 0;

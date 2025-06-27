@@ -1,4 +1,4 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, SLIDER_SCALE, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
+import { PhysicalWorld, VIEWPORT_ZOOM, SLIDER_SCALE, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, valueToSliderPosition, valueToLinearSliderPosition, MOON_MASS_MIN, MOON_MASS_MAX, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX, POINTINESS_MIN, POINTINESS_MAX, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
 import { Millisecond, Second, msToSeconds } from './types.js';
 import { globalTimers } from './timers.js';
 
@@ -214,6 +214,13 @@ function setupSliders(): void {
         slider.max = SLIDER_SCALE.toString();
         slider.value = (SLIDER_SCALE / 2).toString();
     });
+    
+    // Set all sliders to match current values
+    moonMassSlider.value = valueToSliderPosition(moonMass, MOON_MASS_MIN, MOON_MASS_MAX).toString();
+    moonStrengthDistanceSlider.value = valueToSliderPosition(moonStrengthDistance, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX).toString();
+    moonPointingDistanceSlider.value = valueToSliderPosition(moonPointingDistance, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX).toString();
+    rotationCenterDistanceSlider.value = valueToSliderPosition(rotationCenterDistance, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX).toString();
+    pointinessSlider.value = valueToLinearSliderPosition(pointiness, POINTINESS_MIN, POINTINESS_MAX).toString();
     
     const moonMassValue = document.getElementById('moonMassValue') as HTMLSpanElement;
     const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue') as HTMLSpanElement;
