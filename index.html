@@ -66,10 +66,24 @@
         .radio-group input[type="radio"] {
             margin-right: 2px;
         }
+        .metrics {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <div class="metrics">
+        <div>rmsX-rmsY: <span id="shapeMetric">0.00e+0</span></div>
+    </div>
     <div class="controls">
         <div class="control-group">
             <label for="moonMass">Moon Mass: <span id="moonMassValue" class="value-display">1.0</span></label>

@@ -300,6 +300,12 @@ export class PhysicalWorld {
         if (now - this.lastShapeLogTime >= SHAPE_LOG_INTERVAL_MS) {
             console.log(`Shape: shapeDiff=${this.shapeDiffAvg.toExponential(2)}, meanX=${this.meanXAvg.toExponential(2)}`);
             
+            // Update UI display
+            const shapeMetricElement = document.getElementById('shapeMetric');
+            if (shapeMetricElement) {
+                shapeMetricElement.textContent = this.shapeDiffAvg.toExponential(2);
+            }
+            
             // Reset for next period
             this.shapeDiffAvg = 0;
             this.meanXAvg = 0;
