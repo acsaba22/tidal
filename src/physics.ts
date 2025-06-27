@@ -23,6 +23,8 @@ const POINTINESS_MAX = 10;
 
 const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 
+const SHAPE_LOG_INTERVAL_MS = 1000;
+
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
 
 const REST_DISTANCE = PARTICLE_SIZE * 2;
@@ -45,7 +47,7 @@ function updateMoonParams(): void {
     // Calculate moon gravity magnitude at origin (0,0)
     moonGravityMagnitudeAtOrigo = moonMass / (moonStrengthDistance * moonStrengthDistance);
 
-    console.log(`Moon params: mass=${moonMass.toFixed(2)}, strengthDist=${moonStrengthDistance.toFixed(1)}, pointingDist=${moonPointingDistance.toFixed(1)}, rotationCenter=${rotationCenterDistance.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
+    // console.log(`Moon params: mass=${moonMass.toFixed(2)}, strengthDist=${moonStrengthDistance.toFixed(1)}, pointingDist=${moonPointingDistance.toFixed(1)}, rotationCenter=${rotationCenterDistance.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
 }
 
 function logarithmicScale(sliderValue: number, min: number, max: number): number {
@@ -158,7 +160,7 @@ export class Particle {
 
     getTriangleVertices(): number[] {
         let pointingForce = new Coor(0, 0);
-        
+
         if (pointingMode.includes('M')) pointingForce.addInPlace(this.moonGravityForce);
         if (pointingMode.includes('C')) pointingForce.addInPlace(this.centrifugalForce);
         if (pointingMode.includes('E')) pointingForce.addInPlace(this.gravityForce);
@@ -212,6 +214,10 @@ function addPressureForceBetween(p1: Particle, p2: Particle): void {
 
 export class PhysicalWorld {
     public particles: Particle[] = [];
+    private lastShapeLogTime = 0;
+    private shapeDiffAvg = 0;
+    private meanXAvg = 0;
+    private shapeCheckCount = 0;
 
     constructor() {
         this.initializeGrid();
@@ -261,6 +267,47 @@ export class PhysicalWorld {
         return new Float32Array(vertices);
     }
 
+    checkShape(): void {
+        // Calculate current values
+        let meanX = 0, meanY = 0;
+        for (const particle of this.particles) {
+            meanX += particle.position.x;
+            meanY += particle.position.y;
+        }
+        meanX /= this.particles.length;
+        meanY /= this.particles.length;
+
+        // Calculate RMS from mean
+        let sumXSq = 0, sumYSq = 0;
+        for (const particle of this.particles) {
+            const dx = particle.position.x - meanX;
+            const dy = particle.position.y - meanY;
+            sumXSq += dx * dx;
+            sumYSq += dy * dy;
+        }
+        const rmsX = Math.sqrt(sumXSq / this.particles.length);
+        const rmsY = Math.sqrt(sumYSq / this.particles.length);
+        const shapeDiff = rmsX - rmsY;
+
+        // Update running averages
+        this.shapeCheckCount++;
+        this.shapeDiffAvg = (this.shapeDiffAvg * (this.shapeCheckCount - 1) + shapeDiff) / this.shapeCheckCount;
+        this.meanXAvg = (this.meanXAvg * (this.shapeCheckCount - 1) + meanX) / this.shapeCheckCount;
+    }
+
+    logShapePeriodically(): void {
+        const now = performance.now();
+        if (now - this.lastShapeLogTime >= SHAPE_LOG_INTERVAL_MS) {
+            console.log(`Shape: shapeDiff=${this.shapeDiffAvg.toExponential(2)}, meanX=${this.meanXAvg.toExponential(2)}`);
+            
+            // Reset for next period
+            this.shapeDiffAvg = 0;
+            this.meanXAvg = 0;
+            this.shapeCheckCount = 0;
+            this.lastShapeLogTime = now;
+        }
+    }
+
     step(deltaTime: Second): void {
         physicsTimer.start();
 
@@ -269,6 +316,9 @@ export class PhysicalWorld {
         for (const particle of this.particles) {
             particle.moveByForce(deltaTime);
         }
+
+        this.checkShape();
+        this.logShapePeriodically();
 
         physicsTimer.end();
     }
