@@ -1,6 +1,6 @@
-import { PhysicalWorld, VIEWPORT_ZOOM, SLIDER_SCALE, setMoonMass, setMoonStrengthDistance, setMoonPointingDistance, setRotationCenterDistance, setPointiness, setPointingMode, valueToSliderPosition, valueToLinearSliderPosition, MOON_MASS_MIN, MOON_MASS_MAX, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX, POINTINESS_MIN, POINTINESS_MAX, moonMass, moonStrengthDistance, moonPointingDistance, rotationCenterDistance, pointiness } from './physics.js';
+import * as Physics from './physics.js';
 import { msToSeconds } from './types.js';
-import { globalTimers } from './timers.js';
+import * as Timers from './timers.js';
 // Color constants
 const BACKGROUND_COLOR = [1.0, 1.0, 1.0, 1.0]; // White
 const PARTICLE_COLOR = [0.8, 0.2, 0.0, 1.0]; // Dark red-orange
@@ -8,7 +8,7 @@ const AXIS_COLOR = [0.0, 0.0, 0.0, 1.0]; // Black
 class AnimationLoop {
     constructor(world, gl) {
         this.lastTime = 0;
-        this.totalTimer = globalTimers.get('total');
+        this.totalTimer = Timers.globalTimers.get('total');
         this.world = world;
         this.gl = gl;
     }
@@ -21,7 +21,7 @@ class AnimationLoop {
             this.world.step(deltaTimeS);
             render(this.gl);
             this.totalTimer.end();
-            globalTimers.logPeriodically();
+            Timers.globalTimers.logPeriodically();
             requestAnimationFrame(animate);
         };
         requestAnimationFrame(animate);
@@ -128,7 +128,7 @@ function render(gl) {
     const lineViewScaleLocation = gl.getUniformLocation(lineProgram, 'u_viewScale');
     const lineInvAspectRatioLocation = gl.getUniformLocation(lineProgram, 'u_invAspectRatio');
     gl.uniform2f(lineViewCenterLocation, 0.0, 0.0);
-    gl.uniform1f(lineViewScaleLocation, VIEWPORT_ZOOM);
+    gl.uniform1f(lineViewScaleLocation, Physics.VIEWPORT_ZOOM);
     gl.uniform1f(lineInvAspectRatioLocation, invAspectRatio);
     gl.bindBuffer(gl.ARRAY_BUFFER, lineBuffer);
     const linePositionLocation = gl.getAttribLocation(lineProgram, 'a_worldPos');
@@ -141,7 +141,7 @@ function render(gl) {
     const viewScaleLocation = gl.getUniformLocation(particleProgram, 'u_viewScale');
     const invAspectRatioLocation = gl.getUniformLocation(particleProgram, 'u_invAspectRatio');
     gl.uniform2f(viewCenterLocation, 0.0, 0.0);
-    gl.uniform1f(viewScaleLocation, VIEWPORT_ZOOM);
+    gl.uniform1f(viewScaleLocation, Physics.VIEWPORT_ZOOM);
     gl.uniform1f(invAspectRatioLocation, invAspectRatio);
     const vertexArray = world.getAllTriangleVertices();
     gl.bindBuffer(gl.ARRAY_BUFFER, particleBuffer);
@@ -170,15 +170,15 @@ function setupSliders() {
     const pointinessSlider = document.getElementById('pointiness');
     // Set slider ranges from constant
     [moonMassSlider, moonStrengthDistanceSlider, moonPointingDistanceSlider, rotationCenterDistanceSlider, pointinessSlider].forEach(slider => {
-        slider.max = SLIDER_SCALE.toString();
-        slider.value = (SLIDER_SCALE / 2).toString();
+        slider.max = Physics.SLIDER_SCALE.toString();
+        slider.value = (Physics.SLIDER_SCALE / 2).toString();
     });
     // Set all sliders to match current values
-    moonMassSlider.value = valueToSliderPosition(moonMass, MOON_MASS_MIN, MOON_MASS_MAX).toString();
-    moonStrengthDistanceSlider.value = valueToSliderPosition(moonStrengthDistance, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX).toString();
-    moonPointingDistanceSlider.value = valueToSliderPosition(moonPointingDistance, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX).toString();
-    rotationCenterDistanceSlider.value = valueToSliderPosition(rotationCenterDistance, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX).toString();
-    pointinessSlider.value = valueToLinearSliderPosition(pointiness, POINTINESS_MIN, POINTINESS_MAX).toString();
+    moonMassSlider.value = Physics.valueToSliderPosition(Physics.moonMass, Physics.MOON_MASS_MIN, Physics.MOON_MASS_MAX).toString();
+    moonStrengthDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonStrengthDistance, Physics.MOON_STRENGTH_DISTANCE_MIN, Physics.MOON_STRENGTH_DISTANCE_MAX).toString();
+    moonPointingDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonPointingDistance, Physics.MOON_POINTING_DISTANCE_MIN, Physics.MOON_POINTING_DISTANCE_MAX).toString();
+    rotationCenterDistanceSlider.value = Physics.valueToSliderPosition(Physics.rotationCenterDistance, Physics.ROTATION_CENTER_DISTANCE_MIN, Physics.ROTATION_CENTER_DISTANCE_MAX).toString();
+    pointinessSlider.value = Physics.valueToLinearSliderPosition(Physics.pointiness, Physics.POINTINESS_MIN, Physics.POINTINESS_MAX).toString();
     const moonMassValue = document.getElementById('moonMassValue');
     const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue');
     const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue');
@@ -186,28 +186,28 @@ function setupSliders() {
     const pointinessValue = document.getElementById('pointinessValue');
     moonMassSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(moonMassSlider.value);
-        setMoonMass(sliderValue);
-        moonMassValue.textContent = moonMass.toFixed(2);
+        Physics.setMoonMass(sliderValue);
+        moonMassValue.textContent = Physics.moonMass.toFixed(2);
     });
     moonStrengthDistanceSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(moonStrengthDistanceSlider.value);
-        setMoonStrengthDistance(sliderValue);
-        moonStrengthDistanceValue.textContent = Math.round(moonStrengthDistance).toString();
+        Physics.setMoonStrengthDistance(sliderValue);
+        moonStrengthDistanceValue.textContent = Math.round(Physics.moonStrengthDistance).toString();
     });
     moonPointingDistanceSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(moonPointingDistanceSlider.value);
-        setMoonPointingDistance(sliderValue);
-        moonPointingDistanceValue.textContent = Math.round(moonPointingDistance).toString();
+        Physics.setMoonPointingDistance(sliderValue);
+        moonPointingDistanceValue.textContent = Math.round(Physics.moonPointingDistance).toString();
     });
     rotationCenterDistanceSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
-        setRotationCenterDistance(sliderValue);
-        rotationCenterDistanceValue.textContent = rotationCenterDistance.toFixed(1);
+        Physics.setRotationCenterDistance(sliderValue);
+        rotationCenterDistanceValue.textContent = Physics.rotationCenterDistance.toFixed(1);
     });
     pointinessSlider.addEventListener('input', () => {
         const sliderValue = parseFloat(pointinessSlider.value);
-        setPointiness(sliderValue);
-        pointinessValue.textContent = pointiness.toFixed(1);
+        Physics.setPointiness(sliderValue);
+        pointinessValue.textContent = Physics.pointiness.toFixed(1);
     });
     // Setup radio buttons
     const pointingRadios = document.querySelectorAll('input[name="pointing"]');
@@ -215,7 +215,7 @@ function setupSliders() {
         radio.addEventListener('change', (e) => {
             const target = e.target;
             if (target.checked) {
-                setPointingMode(target.value);
+                Physics.setPointingMode(target.value);
             }
         });
     });
@@ -238,7 +238,7 @@ function main() {
         console.error('WebGL initialization failed');
         return;
     }
-    world = new PhysicalWorld();
+    world = new Physics.PhysicalWorld();
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
     setupSliders();
