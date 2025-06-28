@@ -1,5 +1,5 @@
 import * as Physics from './physics.js';
-import { Millisecond, Second, msToSeconds } from './utils.js';
+import { Millisecond, Second, msToSeconds, smartToString } from './utils.js';
 import * as Timers from './timers.js';
 import * as Renderer from './renderer.js';
 
@@ -48,62 +48,45 @@ function resizeCanvas(canvas: HTMLCanvasElement, gl: WebGLRenderingContext): voi
     }
 }
 
-function setupSliders(): void {
-    const moonMassSlider = document.getElementById('moonMass') as HTMLInputElement;
-    const moonStrengthDistanceSlider = document.getElementById('moonStrengthDistance') as HTMLInputElement;
-    const moonPointingDistanceSlider = document.getElementById('moonPointingDistance') as HTMLInputElement;
-    const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance') as HTMLInputElement;
-    const pointinessSlider = document.getElementById('pointiness') as HTMLInputElement;
+function createSlider(id: string, label: string, param: Physics.SimulationConstant): void {
+    const container = document.getElementById('controls-container');
+    if (!container) return;
     
-    // Set slider ranges from constant
-    [moonMassSlider, moonStrengthDistanceSlider, moonPointingDistanceSlider, rotationCenterDistanceSlider, pointinessSlider].forEach(slider => {
-        slider.max = Physics.SLIDER_SCALE.toString();
-        slider.value = (Physics.SLIDER_SCALE / 2).toString();
+    const controlGroup = document.createElement('div');
+    controlGroup.className = 'control-group';
+    
+    const sliderPosition = param.linear ? 
+        Physics.valueToLinearSliderPosition(param.value, param.min, param.max) :
+        Physics.valueToSliderPosition(param.value, param.min, param.max);
+    
+    controlGroup.innerHTML = `
+        <label for="${id}">${label}: <span id="${id}Value" class="value-display"></span></label>
+        <input type="range" id="${id}" min="0" max="${Physics.SLIDER_SCALE}" step="1" value="${sliderPosition}">
+    `;
+    
+    container.insertBefore(controlGroup, container.lastElementChild);
+    
+    const slider = document.getElementById(id) as HTMLInputElement;
+    const valueDisplay = document.getElementById(id + 'Value') as HTMLSpanElement;
+    
+    slider.addEventListener('input', () => {
+        const sliderValue = parseFloat(slider.value);
+        param.setValue(sliderValue);
+        valueDisplay.textContent = smartToString(param.value);
     });
     
-    // Set all sliders to match current values
-    moonMassSlider.value = Physics.valueToSliderPosition(Physics.moonMass, Physics.MOON_MASS_MIN, Physics.MOON_MASS_MAX).toString();
-    moonStrengthDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonStrengthDistance, Physics.MOON_STRENGTH_DISTANCE_MIN, Physics.MOON_STRENGTH_DISTANCE_MAX).toString();
-    moonPointingDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonPointingDistance, Physics.MOON_POINTING_DISTANCE_MIN, Physics.MOON_POINTING_DISTANCE_MAX).toString();
-    rotationCenterDistanceSlider.value = Physics.valueToSliderPosition(Physics.rotationCenterDistance, Physics.ROTATION_CENTER_DISTANCE_MIN, Physics.ROTATION_CENTER_DISTANCE_MAX).toString();
-    pointinessSlider.value = Physics.valueToLinearSliderPosition(Physics.pointiness, Physics.POINTINESS_MIN, Physics.POINTINESS_MAX).toString();
-    
-    const moonMassValue = document.getElementById('moonMassValue') as HTMLSpanElement;
-    const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue') as HTMLSpanElement;
-    const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue') as HTMLSpanElement;
-    const rotationCenterDistanceValue = document.getElementById('rotationCenterDistanceValue') as HTMLSpanElement;
-    const pointinessValue = document.getElementById('pointinessValue') as HTMLSpanElement;
+    valueDisplay.textContent = smartToString(param.value);
+}
 
-    moonMassSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonMassSlider.value);
-        Physics.setMoonMass(sliderValue);
-        moonMassValue.textContent = Physics.moonMass.toFixed(2);
-    });
+function createSliders(): void {
+    createSlider('moonMass', 'Moon Mass', Physics.moonMass);
+    createSlider('moonStrengthDistance', 'Strength Distance', Physics.moonStrengthDistance);
+    createSlider('moonPointingDistance', 'Pointing Distance', Physics.moonPointingDistance);
+    createSlider('rotationCenterDistance', 'Rotation Center', Physics.rotationCenterDistance);
+    createSlider('pointiness', 'Pointiness', Physics.pointiness);
+}
 
-    moonStrengthDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonStrengthDistanceSlider.value);
-        Physics.setMoonStrengthDistance(sliderValue);
-        moonStrengthDistanceValue.textContent = Math.round(Physics.moonStrengthDistance).toString();
-    });
-
-    moonPointingDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonPointingDistanceSlider.value);
-        Physics.setMoonPointingDistance(sliderValue);
-        moonPointingDistanceValue.textContent = Math.round(Physics.moonPointingDistance).toString();
-    });
-
-    rotationCenterDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
-        Physics.setRotationCenterDistance(sliderValue);
-        rotationCenterDistanceValue.textContent = Physics.rotationCenterDistance.toFixed(1);
-    });
-
-    pointinessSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(pointinessSlider.value);
-        Physics.setPointiness(sliderValue);
-        pointinessValue.textContent = Physics.pointiness.toFixed(1);
-    });
-
+function setupPointing(): void {
     // Setup radio buttons
     const pointingRadios = document.querySelectorAll('input[name="pointing"]');
     pointingRadios.forEach(radio => {
@@ -114,9 +97,6 @@ function setupSliders(): void {
             }
         });
     });
-
-    // Trigger initial update
-    moonMassSlider.dispatchEvent(new Event('input'));
 }
 
 function main(): void {
@@ -144,7 +124,8 @@ function main(): void {
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
 
-    setupSliders();
+    createSliders();
+    setupPointing();
 
     const animationLoop = new AnimationLoop(world, gl);
     animationLoop.start();

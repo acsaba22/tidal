@@ -6,21 +6,25 @@ const PLANET_GRAVITY = 1.0;
 const PRESSURE_STRENGTH = 20.0;
 const FORCE_TO_VELOCITY_SCALE = 0.3;
 export const SLIDER_SCALE = 50;
-export const MOON_MASS_MIN = 0.001;
-export let moonMass = 2.0;
-export const MOON_MASS_MAX = 10.0;
-export const MOON_STRENGTH_DISTANCE_MIN = 5;
-export let moonStrengthDistance = 60;
-export const MOON_STRENGTH_DISTANCE_MAX = 2000;
-export const MOON_POINTING_DISTANCE_MIN = 5;
-export let moonPointingDistance = 60;
-export const MOON_POINTING_DISTANCE_MAX = 2000;
-export const ROTATION_CENTER_DISTANCE_MIN = 0.1;
-export let rotationCenterDistance = 5.0;
-export const ROTATION_CENTER_DISTANCE_MAX = 50;
-export const POINTINESS_MIN = -1;
-export let pointiness = 1.0;
-export const POINTINESS_MAX = 10;
+export class SimulationConstant {
+    constructor(min, value, max, linear = false) {
+        this.min = min;
+        this.value = value;
+        this.max = max;
+        this.linear = linear;
+    }
+    setValue(sliderValue) {
+        this.value = this.linear ?
+            linearScale(sliderValue, this.min, this.max) :
+            logarithmicScale(sliderValue, this.min, this.max);
+        updateMoonParams();
+    }
+}
+export const moonMass = new SimulationConstant(0.001, 2.0, 10.0);
+export const moonStrengthDistance = new SimulationConstant(5, 60, 2000);
+export const moonPointingDistance = new SimulationConstant(5, 60, 2000);
+export const rotationCenterDistance = new SimulationConstant(0.1, 5.0, 50);
+export const pointiness = new SimulationConstant(-1, 1.0, 10, true);
 const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 const SHAPE_LOG_INTERVAL_MS = 1000;
 const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
@@ -32,36 +36,20 @@ export let pointingMode = 'MC';
 const physicsTimer = globalTimers.get('worldStep');
 function updateMoonParams() {
     // Calculate moon gravity magnitude at origin (0,0)
-    moonGravityMagnitudeAtOrigo = moonMass / (moonStrengthDistance * moonStrengthDistance);
-    // console.log(`Moon params: mass=${moonMass.toFixed(2)}, strengthDist=${moonStrengthDistance.toFixed(1)}, pointingDist=${moonPointingDistance.toFixed(1)}, rotationCenter=${rotationCenterDistance.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
+    moonGravityMagnitudeAtOrigo = moonMass.value / (moonStrengthDistance.value * moonStrengthDistance.value);
+    // console.log(`Moon params: mass=${moonMass.value.toFixed(2)}, strengthDist=${moonStrengthDistance.value.toFixed(1)}, pointingDist=${moonPointingDistance.value.toFixed(1)}, rotationCenter=${rotationCenterDistance.value.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
 }
 function logarithmicScale(sliderValue, min, max) {
     return min * Math.pow(max / min, sliderValue / SLIDER_SCALE);
+}
+function linearScale(sliderValue, min, max) {
+    return min + (max - min) * (sliderValue / SLIDER_SCALE);
 }
 export function valueToSliderPosition(value, min, max) {
     return SLIDER_SCALE * Math.log(value / min) / Math.log(max / min);
 }
 export function valueToLinearSliderPosition(value, min, max) {
     return SLIDER_SCALE * (value - min) / (max - min);
-}
-export function setMoonMass(sliderValue) {
-    moonMass = logarithmicScale(sliderValue, MOON_MASS_MIN, MOON_MASS_MAX);
-    updateMoonParams();
-}
-export function setMoonStrengthDistance(sliderValue) {
-    moonStrengthDistance = logarithmicScale(sliderValue, MOON_STRENGTH_DISTANCE_MIN, MOON_STRENGTH_DISTANCE_MAX);
-    updateMoonParams();
-}
-export function setMoonPointingDistance(sliderValue) {
-    moonPointingDistance = logarithmicScale(sliderValue, MOON_POINTING_DISTANCE_MIN, MOON_POINTING_DISTANCE_MAX);
-    updateMoonParams();
-}
-export function setRotationCenterDistance(sliderValue) {
-    rotationCenterDistance = logarithmicScale(sliderValue, ROTATION_CENTER_DISTANCE_MIN, ROTATION_CENTER_DISTANCE_MAX);
-    updateMoonParams();
-}
-export function setPointiness(sliderValue) {
-    pointiness = POINTINESS_MIN + (POINTINESS_MAX - POINTINESS_MIN) * (sliderValue / SLIDER_SCALE);
 }
 export function setPointingMode(mode) {
     pointingMode = mode;
@@ -98,12 +86,12 @@ export class Particle {
         this.pressureForce = new Coor(0, 0);
     }
     calculateMoonGravityForce() {
-        const moonStrengthPosition = new Coor(moonStrengthDistance, 0);
+        const moonStrengthPosition = new Coor(moonStrengthDistance.value, 0);
         const strengthDiff = moonStrengthPosition.subtract(this.position);
         const strengthDistance = strengthDiff.distance();
         if (strengthDistance > 0) {
-            const forceMagnitude = moonMass / (strengthDistance * strengthDistance);
-            const moonPointingPosition = new Coor(moonPointingDistance, 0);
+            const forceMagnitude = moonMass.value / (strengthDistance * strengthDistance);
+            const moonPointingPosition = new Coor(moonPointingDistance.value, 0);
             const pointingDiff = moonPointingPosition.subtract(this.position);
             this.moonGravityForce = pointingDiff.normalize().multiply(forceMagnitude);
         }
@@ -113,8 +101,8 @@ export class Particle {
     }
     calculateCentrifugalForce() {
         // Centrifugal force only in x-direction, linear from center
-        const xDistanceFromCenter = this.position.x - rotationCenterDistance;
-        const forceMagnitude = moonGravityMagnitudeAtOrigo * xDistanceFromCenter / rotationCenterDistance;
+        const xDistanceFromCenter = this.position.x - rotationCenterDistance.value;
+        const forceMagnitude = moonGravityMagnitudeAtOrigo * xDistanceFromCenter / rotationCenterDistance.value;
         this.centrifugalForce = new Coor(forceMagnitude, 0);
     }
     sumUpForces() {
@@ -150,7 +138,7 @@ export class Particle {
         // Normalize force direction
         const direction = pointingForce.multiply(1 / forceLength);
         // Calculate triangle vertices pointing in force direction
-        const aspectRatio = 1.0 + forceLength * Math.pow(10, pointiness);
+        const aspectRatio = 1.0 + forceLength * Math.pow(10, pointiness.value);
         const halfWidth = TRIANGLE_SIZE / aspectRatio;
         const height = TRIANGLE_SIZE;
         // Tip point (in force direction)

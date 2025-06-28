@@ -1,5 +1,5 @@
 import * as Physics from './physics.js';
-import { msToSeconds } from './utils.js';
+import { msToSeconds, smartToString } from './utils.js';
 import * as Timers from './timers.js';
 import * as Renderer from './renderer.js';
 class AnimationLoop {
@@ -36,53 +36,37 @@ function resizeCanvas(canvas, gl) {
         Renderer.render(gl, world);
     }
 }
-function setupSliders() {
-    const moonMassSlider = document.getElementById('moonMass');
-    const moonStrengthDistanceSlider = document.getElementById('moonStrengthDistance');
-    const moonPointingDistanceSlider = document.getElementById('moonPointingDistance');
-    const rotationCenterDistanceSlider = document.getElementById('rotationCenterDistance');
-    const pointinessSlider = document.getElementById('pointiness');
-    // Set slider ranges from constant
-    [moonMassSlider, moonStrengthDistanceSlider, moonPointingDistanceSlider, rotationCenterDistanceSlider, pointinessSlider].forEach(slider => {
-        slider.max = Physics.SLIDER_SCALE.toString();
-        slider.value = (Physics.SLIDER_SCALE / 2).toString();
+function createSlider(id, label, param) {
+    const container = document.getElementById('controls-container');
+    if (!container)
+        return;
+    const controlGroup = document.createElement('div');
+    controlGroup.className = 'control-group';
+    const sliderPosition = param.linear ?
+        Physics.valueToLinearSliderPosition(param.value, param.min, param.max) :
+        Physics.valueToSliderPosition(param.value, param.min, param.max);
+    controlGroup.innerHTML = `
+        <label for="${id}">${label}: <span id="${id}Value" class="value-display"></span></label>
+        <input type="range" id="${id}" min="0" max="${Physics.SLIDER_SCALE}" step="1" value="${sliderPosition}">
+    `;
+    container.insertBefore(controlGroup, container.lastElementChild);
+    const slider = document.getElementById(id);
+    const valueDisplay = document.getElementById(id + 'Value');
+    slider.addEventListener('input', () => {
+        const sliderValue = parseFloat(slider.value);
+        param.setValue(sliderValue);
+        valueDisplay.textContent = smartToString(param.value);
     });
-    // Set all sliders to match current values
-    moonMassSlider.value = Physics.valueToSliderPosition(Physics.moonMass, Physics.MOON_MASS_MIN, Physics.MOON_MASS_MAX).toString();
-    moonStrengthDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonStrengthDistance, Physics.MOON_STRENGTH_DISTANCE_MIN, Physics.MOON_STRENGTH_DISTANCE_MAX).toString();
-    moonPointingDistanceSlider.value = Physics.valueToSliderPosition(Physics.moonPointingDistance, Physics.MOON_POINTING_DISTANCE_MIN, Physics.MOON_POINTING_DISTANCE_MAX).toString();
-    rotationCenterDistanceSlider.value = Physics.valueToSliderPosition(Physics.rotationCenterDistance, Physics.ROTATION_CENTER_DISTANCE_MIN, Physics.ROTATION_CENTER_DISTANCE_MAX).toString();
-    pointinessSlider.value = Physics.valueToLinearSliderPosition(Physics.pointiness, Physics.POINTINESS_MIN, Physics.POINTINESS_MAX).toString();
-    const moonMassValue = document.getElementById('moonMassValue');
-    const moonStrengthDistanceValue = document.getElementById('moonStrengthDistanceValue');
-    const moonPointingDistanceValue = document.getElementById('moonPointingDistanceValue');
-    const rotationCenterDistanceValue = document.getElementById('rotationCenterDistanceValue');
-    const pointinessValue = document.getElementById('pointinessValue');
-    moonMassSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonMassSlider.value);
-        Physics.setMoonMass(sliderValue);
-        moonMassValue.textContent = Physics.moonMass.toFixed(2);
-    });
-    moonStrengthDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonStrengthDistanceSlider.value);
-        Physics.setMoonStrengthDistance(sliderValue);
-        moonStrengthDistanceValue.textContent = Math.round(Physics.moonStrengthDistance).toString();
-    });
-    moonPointingDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(moonPointingDistanceSlider.value);
-        Physics.setMoonPointingDistance(sliderValue);
-        moonPointingDistanceValue.textContent = Math.round(Physics.moonPointingDistance).toString();
-    });
-    rotationCenterDistanceSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(rotationCenterDistanceSlider.value);
-        Physics.setRotationCenterDistance(sliderValue);
-        rotationCenterDistanceValue.textContent = Physics.rotationCenterDistance.toFixed(1);
-    });
-    pointinessSlider.addEventListener('input', () => {
-        const sliderValue = parseFloat(pointinessSlider.value);
-        Physics.setPointiness(sliderValue);
-        pointinessValue.textContent = Physics.pointiness.toFixed(1);
-    });
+    valueDisplay.textContent = smartToString(param.value);
+}
+function createSliders() {
+    createSlider('moonMass', 'Moon Mass', Physics.moonMass);
+    createSlider('moonStrengthDistance', 'Strength Distance', Physics.moonStrengthDistance);
+    createSlider('moonPointingDistance', 'Pointing Distance', Physics.moonPointingDistance);
+    createSlider('rotationCenterDistance', 'Rotation Center', Physics.rotationCenterDistance);
+    createSlider('pointiness', 'Pointiness', Physics.pointiness);
+}
+function setupPointing() {
     // Setup radio buttons
     const pointingRadios = document.querySelectorAll('input[name="pointing"]');
     pointingRadios.forEach(radio => {
@@ -93,8 +77,6 @@ function setupSliders() {
             }
         });
     });
-    // Trigger initial update
-    moonMassSlider.dispatchEvent(new Event('input'));
 }
 function main() {
     const canvas = document.getElementById('canvas');
@@ -115,7 +97,8 @@ function main() {
     world = new Physics.PhysicalWorld();
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
-    setupSliders();
+    createSliders();
+    setupPointing();
     const animationLoop = new AnimationLoop(world, gl);
     animationLoop.start();
 }
