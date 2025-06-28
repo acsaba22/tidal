@@ -1,4 +1,4 @@
-import { Second } from './types.js';
+import { Second } from './utils.js';
 import { globalTimers } from './timers.js';
 
 const PARTICLE_SIZE = 0.06;

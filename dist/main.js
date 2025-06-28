@@ -1,5 +1,5 @@
 import * as Physics from './physics.js';
-import { msToSeconds } from './types.js';
+import { msToSeconds } from './utils.js';
 import * as Timers from './timers.js';
 import * as Renderer from './renderer.js';
 class AnimationLoop {

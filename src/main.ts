@@ -1,5 +1,5 @@
 import * as Physics from './physics.js';
-import { Millisecond, Second, msToSeconds } from './types.js';
+import { Millisecond, Second, msToSeconds } from './utils.js';
 import * as Timers from './timers.js';
 import * as Renderer from './renderer.js';
 
