@@ -9,7 +9,7 @@
 - Tidal forces physics simulation
 - WebGL + TypeScript approach
 - World coordinates: -1 to +1 range
-- Arrow-shaped triangles will represent force vectors
+- Arrow-shaped triangles represent force vectors
 
 ## Technical Decisions
 - Viewport transformation in vertex shader (not JavaScript)
@@ -24,34 +24,44 @@
   - **Force magnitude**: Based on moonMass / strengthDistance²
   - **Force direction**: Points toward moonPointingDistance position
   - **Centrifugal force**: Linear with distance from rotationCenterDistance, x-direction only
-- **Triangle pointing**: Shows combined moon gravity + centrifugal forces with exponential pointiness (10^pointiness)
+- **Triangle pointing**: Configurable via radio buttons (M, C, MC, E, MCE) with exponential pointiness (10^pointiness)
 
 ## Code Structure
 ```
 src/
-├── main.ts          # WebGL rendering + main loop  
+├── main.ts          # WebGL rendering + main loop + UI controls
 ├── physics.ts       # Physics simulation (Particle, PhysicalWorld classes)
 └── types.ts         # Shared types/interfaces
 ```
 
 ## UI Design
 - **HTML controls over WebGL canvas** - bottom overlay in 3×2 grid layout
-- **Current sliders** (5 total, logarithmic scaling except pointiness):
-  - Moon Mass (0.001 to 10.0)
-  - Moon Strength Distance (5 to 2000) - for force magnitude calculation
-  - Moon Pointing Distance (5 to 2000) - for force direction  
-  - Rotation Center Distance (0.1 to 50) - for centrifugal force center
-  - Pointiness (-1 to +10) - exponential triangle sharpness (10^value)
-- **Debug logging**: Console output for force magnitudes (scientific notation)
+- **Shape metrics display** - upper right corner shows live rmsX-rmsY values
+- **Current controls**:
+  - 5 sliders with 50 positions each (logarithmic scaling except pointiness)
+  - Moon Mass (0.001 to 10.0, default 2.0)
+  - Moon Strength Distance (5 to 2000, default 60) - for force magnitude
+  - Moon Pointing Distance (5 to 2000, default 60) - for force direction  
+  - Rotation Center Distance (0.1 to 50, default 5.0) - for centrifugal force center
+  - Pointiness (-1 to +10, default 1.0) - exponential triangle sharpness
+  - Radio buttons for triangle pointing: M, C, MC, E, MCE
 - **Compact styling**: Small text, reduced spacing for non-intrusive overlay
 
-## Recent Implementation
-- ✅ Moon physics system with 4 independent parameters
-- ✅ 5-slider UI in 3×2 grid layout with real-time updates
-- ✅ Triangle pointing based on combined forces
-- ✅ Exponential pointiness control
-- ✅ Force debugging with scientific notation
+## Shape Deformation Metrics
+- **rmsX-rmsY**: Root mean square difference showing elongation
+  - Positive = wider than tall, negative = taller than wide, ~0 = circular
+  - Updates every 1000ms with averaged values
+  - Displayed in UI and logged to console
+- **meanX, meanY**: Center drift tracking (console only)
 
-## Next Steps  
-- Add radio buttons to choose which forces affect triangle pointing
-- Consider additional force visualization options
+## Recent Accomplishments
+- ✅ Radio button triangle pointing control with 5 force combinations
+- ✅ Smooth 50-position sliders with proper initialization 
+- ✅ Constants organized in groups of 3 (min, default, max)
+- ✅ Real-time shape deformation metrics
+- ✅ Live UI display of physics metrics
+- ✅ No more slider jumping - positions match code defaults
+
+## Future Considerations
+- Code cleanup/refactoring for simplicity
+- Additional physics visualizations
