@@ -7,8 +7,8 @@ export function msToSeconds(ms: Millisecond): Second {
 
 export function smartToString(num: number, decimals: number = 2): string {
     if (num >= 0.001 && num < 1000) {
-        return num.toFixed(decimals);
-    } else {
         return num.toPrecision(3);
+    } else {
+        return num.toExponential(2);
     }
 }

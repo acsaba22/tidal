@@ -1,3 +1,4 @@
+import { smartToString } from './utils.js';
 import { globalTimers } from './timers.js';
 const PARTICLE_SIZE = 0.06;
 const GRID_SIZE = 32; // particle count = GRID_SIZE^2
@@ -237,11 +238,11 @@ export class PhysicalWorld {
     logShapePeriodically() {
         const now = performance.now();
         if (now - this.lastShapeLogTime >= SHAPE_LOG_INTERVAL_MS) {
-            console.log(`Shape: shapeDiff=${this.shapeDiffAvg.toExponential(2)}, meanX=${this.meanXAvg.toExponential(2)}`);
+            console.log(`Shape: shapeDiff=${smartToString(this.shapeDiffAvg)}, meanX=${smartToString(this.meanXAvg)}`);
             // Update UI display
             const shapeMetricElement = document.getElementById('shapeMetric');
             if (shapeMetricElement) {
-                shapeMetricElement.textContent = this.shapeDiffAvg.toExponential(2);
+                shapeMetricElement.textContent = smartToString(this.shapeDiffAvg);
             }
             // Reset for next period
             this.shapeDiffAvg = 0;

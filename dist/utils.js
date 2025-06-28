@@ -3,9 +3,9 @@ export function msToSeconds(ms) {
 }
 export function smartToString(num, decimals = 2) {
     if (num >= 0.001 && num < 1000) {
-        return num.toFixed(decimals);
+        return num.toPrecision(3);
     }
     else {
-        return num.toPrecision(3);
+        return num.toExponential(2);
     }
 }
