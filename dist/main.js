@@ -67,7 +67,6 @@ function createSliders() {
     createSlider('pointiness', 'Pointiness', Physics.pointiness);
 }
 function setupPointing() {
-    // Setup radio buttons
     const pointingRadios = document.querySelectorAll('input[name="pointing"]');
     pointingRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -76,6 +75,10 @@ function setupPointing() {
                 Physics.setPointingMode(target.value);
             }
         });
+    });
+    const sideViewCheckbox = document.getElementById('sideView');
+    sideViewCheckbox.addEventListener('change', () => {
+        Physics.setSideView(sideViewCheckbox.checked);
     });
 }
 function main() {

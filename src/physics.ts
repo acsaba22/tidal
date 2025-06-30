@@ -53,6 +53,7 @@ export const pointiness = new SimulationConstant(-1, 2.0, 10, true);
 
 // Triangle pointing mode: M=moon, C=centrifugal, E=earth, MC=moon+centrifugal, MCE=all
 export let pointingMode = 'MC';
+export let isSideView = false;
 
 const physicsTimer = globalTimers.get('worldStep');
 
@@ -79,6 +80,10 @@ export function valueToLinearSliderPosition(value: number, min: number, max: num
 
 export function setPointingMode(mode: string): void {
     pointingMode = mode;
+}
+
+export function setSideView(sideView: boolean): void {
+    isSideView = sideView;
 }
 
 export class Coor {
@@ -135,9 +140,14 @@ export class Particle {
     }
 
     calculateCentrifugalForce(): void {
-        // Centrifugal force from rotation center point (top view)
-        const rotationCenter = new Coor(rotationCenterDistance.value, 0);
-        this.centrifugalForce = this.position.subtract(rotationCenter);
+        if (isSideView) {
+            const xDistanceFromCenter = this.position.x - rotationCenterDistance.value;
+            const forceMagnitude = xDistanceFromCenter / rotationCenterDistance.value;
+            this.centrifugalForce = new Coor(forceMagnitude, 0);
+        } else {
+            const rotationCenter = new Coor(rotationCenterDistance.value, 0);
+            this.centrifugalForce = this.position.subtract(rotationCenter);
+        }
     }
 
     sumUpForces(): void {

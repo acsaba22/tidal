@@ -87,7 +87,6 @@ function createSliders(): void {
 }
 
 function setupPointing(): void {
-    // Setup radio buttons
     const pointingRadios = document.querySelectorAll('input[name="pointing"]');
     pointingRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -96,6 +95,11 @@ function setupPointing(): void {
                 Physics.setPointingMode(target.value);
             }
         });
+    });
+
+    const sideViewCheckbox = document.getElementById('sideView') as HTMLInputElement;
+    sideViewCheckbox.addEventListener('change', () => {
+        Physics.setSideView(sideViewCheckbox.checked);
     });
 }
 
