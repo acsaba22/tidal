@@ -1,5 +1,10 @@
 # Tidal Forces Visualization
 
+## Potential TODOs
+- Change earth view from side to top-down
+- Variable spring strength (^2 instead of linear pressure forces)
+- Implement RK2 numerical integration for better physics accuracy
+- Optimize pressure calculation by sorting particles by x first
 
 2D physics simulation showing tidal forces on a planet with customizable moon distance.
 Allow real-time adjustment of moon distance (including infinite distance)
