@@ -98,6 +98,7 @@ function main() {
     resizeCanvas(canvas, gl);
     window.addEventListener('resize', () => resizeCanvas(canvas, gl));
     createSliders();
+    Physics.updateMoonParams();
     setupPointing();
     const animationLoop = new AnimationLoop(world, gl);
     animationLoop.start();

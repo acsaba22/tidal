@@ -1,11 +1,16 @@
 import { smartToString } from './utils.js';
 import { globalTimers } from './timers.js';
-const PARTICLE_SIZE = 0.06;
+const PARTICLE_SIZE = 0.05;
 const GRID_SIZE = 32; // particle count = GRID_SIZE^2
 const GRID_DISTANCE = PARTICLE_SIZE * 2;
 const PLANET_GRAVITY = 1.0;
-const PRESSURE_STRENGTH = 20.0;
-const FORCE_TO_VELOCITY_SCALE = 0.3;
+const PRESSURE_STRENGTH = 50.0;
+const FORCE_TO_VELOCITY_SCALE = 0.2;
+const SHAPE_LOG_INTERVAL_MS = 1000;
+const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
+const REST_DISTANCE = PARTICLE_SIZE * 2;
+export const VIEWPORT_ZOOM = 0.4;
+const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
 export const SLIDER_SCALE = 50;
 export class SimulationConstant {
     constructor(min, value, max, linear = false) {
@@ -21,21 +26,16 @@ export class SimulationConstant {
         updateMoonParams();
     }
 }
-export const moonMass = new SimulationConstant(0.001, 2.0, 10.0);
-export const moonStrengthDistance = new SimulationConstant(5, 60, 2000);
-export const moonPointingDistance = new SimulationConstant(5, 60, 2000);
-export const rotationCenterDistance = new SimulationConstant(0.1, 5.0, 50);
-export const pointiness = new SimulationConstant(-1, 1.0, 10, true);
-const PARTICLE_LOG_FREQUENCY = 1e10; // 1e5 is ~1.5s ; 1e10 never
-const SHAPE_LOG_INTERVAL_MS = 1000;
-const TRIANGLE_SIZE = PARTICLE_SIZE * 0.5;
-const REST_DISTANCE = PARTICLE_SIZE * 2;
-export const VIEWPORT_ZOOM = 0.4;
+export const moonMass = new SimulationConstant(0.001, 0.01, 10.0);
+export const moonStrengthDistance = new SimulationConstant(2, 60, 2000);
+export const moonPointingDistance = new SimulationConstant(2, 60, 2000);
+export const rotationCenterDistance = new SimulationConstant(0.1, 0.74, 50);
+export const pointiness = new SimulationConstant(-1, 2.0, 10, true);
 export let moonGravityMagnitudeAtOrigo = 0;
 // Triangle pointing mode: M=moon, C=centrifugal, E=earth, MC=moon+centrifugal, MCE=all
 export let pointingMode = 'MC';
 const physicsTimer = globalTimers.get('worldStep');
-function updateMoonParams() {
+export function updateMoonParams() {
     // Calculate moon gravity magnitude at origin (0,0)
     moonGravityMagnitudeAtOrigo = moonMass.value / (moonStrengthDistance.value * moonStrengthDistance.value);
     // console.log(`Moon params: mass=${moonMass.value.toFixed(2)}, strengthDist=${moonStrengthDistance.value.toFixed(1)}, pointingDist=${moonPointingDistance.value.toFixed(1)}, rotationCenter=${rotationCenterDistance.value.toFixed(1)}, gravityAtOrigo=${moonGravityMagnitudeAtOrigo.toExponential(2)}`);
